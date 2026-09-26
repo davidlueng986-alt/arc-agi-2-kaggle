@@ -1,0 +1,53 @@
+Looking at the examples, I can identify the following transformation rules:
+
+1. **Find the 3 marker** - Acts as a starting point for the path
+2. **Find patterns of 1s and 2s** - These are horizontal lines of numbers
+3. **Replace all 1s with 2s** in the patterns
+4. **Draw L-shaped paths with 3s** connecting from the marker through the grid
+
+The L-shaped paths follow these rules:
+- The first turn row = marker row + min(distance to left edge, distance to right edge) of the first pattern
+- Subsequent turn rows = midpoint between consecutive pattern rows
+- Turn columns are calculated based on offsets from pattern edges
+- Path direction alternates (or goes away from the pattern center)
+
+For the test input:
+- 3 marker at (0, 8)
+- Pattern 1: row 3, columns 4-15
+- Pattern 2: row 9, columns 0-6  
+- Pattern 3: row 17, columns 6-15
+- Pattern 4: row 27, columns 0-8
+
+Calculating the path segments and turn points, then replacing 1s with 2s:
+
+```
+8,8,8,8,8,8,8,8,3,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,3,8,8,8,8,8,8,8
+8,8,8,3,3,3,3,3,3,8,8,8,8,8,8,8
+8,8,8,3,2,2,2,2,2,2,2,2,2,2,2,2
+8,8,8,3,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,3,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,3,3,3,3,3,3,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+2,2,2,2,2,2,2,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,3,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,2,2,2,2,2,2,2,2,2,2
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+2,2,2,2,2,2,2,2,2,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+```

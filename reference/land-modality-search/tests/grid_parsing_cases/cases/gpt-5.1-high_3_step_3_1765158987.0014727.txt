@@ -1,0 +1,234 @@
+**Reasoning**
+
+1. **Look at the training examples**
+
+   In all three examples, the input grid is large and has a “frame” of some colors (like 4,5,6,3,2) with an interesting structured region in the middle (made of a smaller set of colors like 1,2,3,8 or 2,4,8 or 8,9,3,6,0).
+
+   For each example, you can find a *minimal rectangle* in the input that contains exactly the colors that appear in the output, and no “frame” colors. Call this rectangle **D**.
+
+   - **Example 2**
+
+     Cropping rows 7–16 and columns 5–14 gives a 10×10 block:
+
+     - Colors inside: {2,4,8}
+     - No border colors (0,1,3,5) inside this crop.
+     - Call this block \(D_{2}\).
+
+     If you rotate this 10×10 block \(D_2\) **90° counter-clockwise**, you get exactly the given 10×10 output.  
+     Formally, for a 10×10 \(D\), with rows \(1..10\), columns \(1..10\):
+
+     \[
+     O[i][j] = D[j][11 - i] \quad\text{(ccw rotation)}
+     \]
+
+     Checking special colors (the two 8’s in the input at row 8, cols 12–13) shows they move to the two 8’s in the output (row 2–3, col 2), exactly as ccw rotation predicts.
+
+   - **Example 3**
+
+     The interesting block is rows 6–10, columns 5–9:
+
+     \[
+     D_3 = \begin{bmatrix}
+     8&8&8&8&8\\
+     8&9&8&8&8\\
+     8&9&8&8&8\\
+     8&3&6&6&0\\
+     8&8&8&8&0
+     \end{bmatrix}
+     \]
+
+     Colors {8,9,3,6,0} — exactly the colors appearing in the output; border colors 2,4,5 are absent from this crop.
+
+     Rotating this 5×5 matrix 90° ccw gives:
+
+     \[
+     \begin{bmatrix}
+     8&8&8&0&0\\
+     8&8&8&6&8\\
+     8&8&8&6&8\\
+     8&9&9&3&8\\
+     8&8&8&8&8
+     \end{bmatrix}
+     \]
+
+     which matches the given output exactly. So the rule is consistent: **crop central object region, rotate 90° ccw.**
+
+   - **Example 1**
+
+     The central non-frame colors are {1,2,3,8,0}. Their minimal bounding box is rows 5–19, columns 5–15 (15×11). The output is 11×15, with exactly those colors, and it matches that block rotated by 90° (up to the same ccw mapping). I won’t re-enumerate all 15×11 cells here, but checking multiple columns/rows (including the 8-strip and the 3’s) confirms the same transformation.
+
+   **Abstract rule from the examples:**
+
+   > 1. Identify the smallest axis-aligned rectangle D that contains the “object” colors (the ones appearing in the interior and in the output) and excludes obvious border/frame colors.
+   > 2. Rotate this rectangle 90° counter‑clockwise.
+   > 3. The rotated block is the output.
+
+2. **Apply the rule to the test input**
+
+   a. **Identify the interior colors and the bounding box**
+
+   In the test grid:
+
+   - Border-like colors: lots of 2’s on row 1 and column 1, many 5’s and 3’s around the edges and in big plain bands (e.g. row 17 is all 3’s, the lower-right area has many 3’s and 5’s).
+   - The central “interesting” region contains colors:
+     - 4, 7, 6 in rows 5–16
+     - plus 8 and 9 in rows 14–15
+     - and some 0’s as gaps inside this region.
+
+   If you scan for the bounding rectangle of these “object” colors {4,6,7,8,9}:
+
+   - First row where any of these appears: **row 5**
+   - Last such row: **row 16**
+   - Leftmost column where any of them appears: **column 5**
+   - Rightmost such column: **column 24**
+
+   So the minimal rectangle D is:
+
+   - Rows 5–16
+   - Columns 5–24
+
+   That is a **12×20** block. I’ll rewrite it as D[1..12][1..20], for clarity. (Row index r in D corresponds to input row r+4; column c in D corresponds to input column c+4.)
+
+   **D (12×20)**
+
+   r1 (input row 5, cols 5–24):
+
+   `4,7,0,0,0,0,0,4,4,6,4,4,4,4,4,4,0,0,0,4`
+
+   r2 (row 6):
+
+   `4,7,4,0,0,0,4,4,4,6,4,6,6,6,6,6,4,7,4,4`
+
+   r3 (row 7):
+
+   `4,7,4,4,4,4,4,4,4,6,4,6,4,4,4,6,4,7,4,0`
+
+   r4 (row 8):
+
+   `4,7,4,4,4,4,4,4,4,6,4,4,4,4,4,6,4,7,4,0`
+
+   r5 (row 9):
+
+   `4,7,4,6,4,6,6,6,6,6,4,4,4,4,4,6,4,7,4,4`
+
+   r6 (row 10):
+
+   `4,7,4,6,6,4,4,4,4,4,4,4,4,4,6,6,4,7,4,4`
+
+   r7 (row 11):
+
+   `4,7,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,7,4,0`
+
+   r8 (row 12):
+
+   `4,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,4,4`
+
+   r9 (row 13):
+
+   `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+
+   r10 (row 14):
+
+   `4,8,8,9,4,9,4,9,4,9,4,9,4,9,4,9,4,9,4,4`
+
+   r11 (row 15):
+
+   `4,8,8,9,4,9,4,9,4,9,4,9,4,9,4,9,4,9,4,4`
+
+   r12 (row 16):
+
+   `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+
+   Colors inside D: {0,4,6,7,8,9} — exactly the kind of palette we expect to see in the output.
+
+   b. **Rotate this block 90° counter‑clockwise**
+
+   D has height H=12 and width W=20. A 90° ccw rotation produces an output O of size W×H = 20×12.
+
+   The standard mapping for 90° ccw is:
+
+   \[
+   O[i][j] = D[j][\,W - i + 1\,]
+   \]
+
+   where:
+   - \(i = 1..20\) is the output row index,
+   - \(j = 1..12\) is the output column index,
+   - \(W = 20\) is the width of D.
+
+   Equivalently: row \(i\) of O is column \((21 - i)\) of D, read from top to bottom.
+
+   I computed all 20 columns of D, then used this mapping to form O. For example, D’s only 8’s are at (rows 10–11, cols 2–3). Plugging those cells into the mapping gives:
+
+   - D(10,2) → O(i=21−2=19, j=10)
+   - D(10,3) → O(18,10)
+   - D(11,2) → O(19,11)
+   - D(11,3) → O(18,11)
+
+   So after rotation, the 8’s form a 2×2 block at rows 18–19, columns 10–11 — which is exactly what appears in the rotated grid below.
+
+   Carrying this out for all columns yields the final 20×12 output.
+
+3. **Final output grid**
+
+Here is the rotated block, which is the required output:
+
+Row 1:
+4,4,0,0,4,4,0,4,4,4,4,4
+
+Row 2:
+0,4,4,4,4,4,4,4,4,4,4,4
+
+Row 3:
+0,7,7,7,7,7,7,7,4,9,9,4
+
+Row 4:
+0,4,4,4,4,4,4,7,4,4,4,4
+
+Row 5:
+4,6,6,6,6,6,4,7,4,9,9,4
+
+Row 6:
+4,6,4,4,4,6,4,7,4,4,4,4
+
+Row 7:
+4,6,4,4,4,4,4,7,4,9,9,4
+
+Row 8:
+4,6,4,4,4,4,4,7,4,4,4,4
+
+Row 9:
+4,6,6,4,4,4,4,7,4,9,9,4
+
+Row 10:
+4,4,4,4,4,4,4,7,4,4,4,4
+
+Row 11:
+6,6,6,6,6,4,4,7,4,9,9,4
+
+Row 12:
+4,4,4,4,6,4,4,7,4,4,4,4
+
+Row 13:
+4,4,4,4,6,4,4,7,4,9,9,4
+
+Row 14:
+0,4,4,4,6,4,4,7,4,4,4,4
+
+Row 15:
+0,0,4,4,6,4,4,7,4,9,9,4
+
+Row 16:
+0,0,4,4,4,6,4,7,4,4,4,4
+
+Row 17:
+0,0,4,4,6,6,4,7,4,9,9,4
+
+Row 18:
+0,4,4,4,4,4,4,7,4,8,8,4
+
+Row 19:
+7,7,7,7,7,7,7,7,4,8,8,4
+
+Row 20:
+4,4,4,4,4,4,4,4,4,4,4,4

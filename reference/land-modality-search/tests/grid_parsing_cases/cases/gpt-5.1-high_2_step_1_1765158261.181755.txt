@@ -1,0 +1,145 @@
+**Reasoning**
+
+1. **What changes in the examples?**
+
+   Across the three solved examples, only cells that are `0` and **completely surrounded (4‑connected) by a single color** get changed. These are *holes* inside colored regions.
+
+   So first step in every grid:
+   - Treat all non‑zero colors as walls.
+   - Find all 4‑connected components of `0` cells.
+   - A `0` component is a *hole* if you cannot reach the outer border of the grid from it via 4‑connected `0` moves.
+   - Each such hole is always entirely inside one enclosing color (all boundary neighbors have the same color).
+
+   That is true for:
+   - Example 1: holes inside the `4` rectangle, holes inside the `3` blob, and holes inside the `7` rectangle.
+   - Example 2: holes inside the `8` frame, inside the `4` frame, and inside the `5` region.
+   - Example 3: holes inside the `2` frame, and inside the `4` frame.
+
+   Then only **some** of these holes are recolored. The color they change to is determined by a *color-association* rule that is encoded somewhere in the grid. In the test grid this association is given explicitly.
+
+2. **How the fill color is chosen (for the test grid)**
+
+   In the test input, there is a clear “legend” block at the bottom‑left:
+
+   ```
+   row11: 5 4 6 7 8
+   row12: 9 8 3 1 2
+   ```
+
+   If you look at these as 5 vertical pairs:
+
+   - (row11,row12) column 0: 5 over 9
+   - column 1: 4 over 8
+   - column 2: 6 over 3
+   - column 3: 7 over 1
+   - column 4: 8 over 2
+
+   We interpret this as a mapping **from the lower color (row12) to the upper color (row11)**; i.e., for any region whose color is one of the bottom numbers, its enclosed hole(s) should be filled with the corresponding top number:
+
+   - 9 → 5
+   - 8 → 4
+   - 3 → 6
+   - 1 → 7
+   - 2 → 8
+
+   In the rest of the test grid, the only regions that actually have enclosed `0`‑holes are:
+
+   - The **`1` region** in the top‑left.
+   - The **`3` region** in the top‑right.
+
+   Their colors (`1` and `3`) both appear in the lower row of the legend, so we can read off their fill colors:
+
+   - Region color `1` → fill holes with `7`.
+   - Region color `3` → fill holes with `6`.
+
+3. **Finding the holes in the test grid**
+
+   Test input (for reference):
+
+   ```
+   0,1,1,1,1,1,0,0,3,3,3,3,0
+   0,1,0,0,0,1,0,0,3,0,0,3,0
+   0,1,1,0,0,1,0,0,3,0,0,3,0
+   0,0,1,1,1,1,0,0,3,3,3,3,0
+   0,0,0,0,0,0,0,0,0,0,0,0,0
+   0,0,0,0,0,0,0,0,5,5,5,0,0
+   0,0,2,0,0,0,0,5,0,0,0,5,0
+   0,2,0,2,0,0,0,5,0,0,0,0,5
+   0,0,2,0,0,0,0,0,5,5,5,5,5
+   0,0,0,0,0,0,0,0,5,0,0,0,0
+   0,0,0,0,0,0,0,0,0,0,2,0,0
+   5,4,6,7,8,0,0,0,0,2,0,2,0
+   9,8,3,1,2,0,0,0,0,0,2,0,0
+   ```
+
+   **`1` region (top‑left):**
+
+   Bounding box rows 0–3, cols 1–5:
+
+   ```
+   row0: 1 1 1 1 1
+   row1: 1 0 0 0 1
+   row2: 1 1 0 0 1
+   row3: 0 1 1 1 1
+   ```
+
+   The internal `0` cells here are at coordinates (row,col) (0‑indexed):
+
+   - (1,2), (1,3), (1,4), (2,3), (2,4)
+
+   These five `0`s form a connected `0`‑region whose 4‑neighbors are only `1`s; there is no 4‑connected path of zeros from any of these out to the grid border. So this is a single *hole of color 1*.
+
+   By the legend mapping, 1 → 7, so we recolor these five cells to `7`.
+
+   **`3` region (top‑right):**
+
+   Bounding box rows 0–3, cols 8–11:
+
+   ```
+   row0: 3 3 3 3
+   row1: 3 0 0 3
+   row2: 3 0 0 3
+   row3: 3 3 3 3
+   ```
+
+   Internal `0` cells are:
+
+   - (1,9), (1,10), (2,9), (2,10)
+
+   Again, they form a connected component of `0`s entirely surrounded by `3`s, so they are a hole of the `3` region.
+
+   Legend gives 3 → 6, so we recolor those four cells to `6`.
+
+   No other color regions in the grid form closed loops around `0`s, so there are no more holes to fill.
+
+4. **Apply the fill**
+
+   Starting from the input, recolor only the identified hole cells:
+
+   - For the `1` region:
+     - (1,2), (1,3), (1,4), (2,3), (2,4) become `7`.
+
+   - For the `3` region:
+     - (1,9), (1,10), (2,9), (2,10) become `6`.
+
+   All other cells remain unchanged.
+
+---
+
+## Final output grid
+
+```
+0,1,1,1,1,1,0,0,3,3,3,3,0
+0,1,7,7,7,1,0,0,3,6,6,3,0
+0,1,1,7,7,1,0,0,3,6,6,3,0
+0,0,1,1,1,1,0,0,3,3,3,3,0
+0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,5,5,5,0,0
+0,0,2,0,0,0,0,5,0,0,0,5,0
+0,2,0,2,0,0,0,5,0,0,0,0,5
+0,0,2,0,0,0,0,0,5,5,5,5,5
+0,0,0,0,0,0,0,0,5,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,2,0,0
+5,4,6,7,8,0,0,0,0,2,0,2,0
+9,8,3,1,2,0,0,0,0,0,2,0,0
+```

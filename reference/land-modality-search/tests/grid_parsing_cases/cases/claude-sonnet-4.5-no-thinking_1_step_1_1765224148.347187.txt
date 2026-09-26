@@ -1,0 +1,68 @@
+Looking at this problem, I need to understand the transformation pattern from the examples.
+
+## Analysis of Examples
+
+**Example 1:**
+- Input has a `4` at position (10, 0) and an `8` at position (5, 10) where it should be `0`
+- Output: The `4` is moved/expanded to fill a 3x5 diamond-like pattern in rows 11-14, columns 1-4
+- Also, rows 6-9, columns 10-15 are filled with `8`s (filling what should have been a hollow diamond)
+
+**Example 2:**
+- Input has a `7` at position (0, 0), `1` at position (5, 10), and `4` at position (10, 5)
+- Output: 
+  - `7` fills the diamond pattern at rows 1-4, columns 1-4
+  - `1` fills the diamond pattern at rows 6-9, columns 12-15
+  - `4` fills the diamond pattern at rows 11-14, columns 6-9
+
+## Pattern Recognition
+
+The grid has a repeating pattern of hollow diamonds (made with 0s and 8s). The transformation:
+1. Find cells with non-0, non-8 values (anomalies)
+2. These anomalies mark positions where a diamond should be filled
+3. Fill the corresponding diamond pattern with the anomaly color
+4. The diamond to fill appears to be in the same "block" or nearby block based on the position
+
+Looking more carefully at the structure:
+- The grid is made of repeating 5-row blocks separated by horizontal lines (rows of pattern `0,8,8,8,8,0...` or `8,8,8,8,8...`)
+- Each block has a hollow diamond pattern (4 inner rows)
+- When an anomaly appears on a separator row, it indicates which diamond to fill
+
+**Test Input Analysis:**
+- There's a `1` at position (5, 5)
+- Row 5 is a separator row: `8,8,8,8,8,1,8,8,8,8,8,8,8,8,8,0`
+
+The `1` at column 5 suggests filling the diamond in the block that contains column 5, which would be the first diamond (columns 1-4) in rows 6-9.
+
+Let me trace through where diamonds are:
+- Block 1 (rows 1-4): diamonds at columns 1-4, 6-9, 11-14
+- Block 2 (rows 6-9): diamonds at columns 1-4, 6-9, 11-14  
+- Block 3 (rows 11-14): diamonds at columns 1-4, 6-9, 11-14
+- Block 4 (rows 16-19): diamonds at columns 1-4, 6-9, 11-14
+
+The `1` at (5, 5) is between blocks 1 and 2, at column 5 which is between the first diamond (cols 1-4) and second diamond (cols 6-9). Looking at the examples, the anomaly seems to indicate the diamond in the NEXT block at the corresponding position.
+
+Given column 5 is right after columns 1-4, this should fill the diamond at rows 6-9, columns 1-4 with color `1`.
+
+<OUTPUT>
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+8,8,8,8,8,0,8,8,8,8,8,8,8,8,8,0
+8,8,1,1,8,8,8,0,0,8,8,8,0,0,8,8
+8,1,1,1,1,8,0,0,0,0,8,0,0,0,0,8
+8,1,1,1,1,8,0,0,0,0,8,0,0,0,0,8
+8,8,1,1,8,8,8,0,0,8,8,8,0,0,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+0,8,8,8,8,0,8,8,8,8,0,8,8,8,8,0
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+0,8,8,8,8,0,8,8,8,8,0,8,8,8,8,0
+</OUTPUT>

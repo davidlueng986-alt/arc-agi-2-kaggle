@@ -1,0 +1,33 @@
+Looking at the examples, I can identify these transformation rules:
+
+1. **Find the marker "3"** - This acts as a reference point
+2. **Find patterns of 1s and 2s** - These are linear patterns (horizontal or vertical lines)
+3. **Convert all 1s to 2s** - The pattern becomes uniform 2s
+4. **Draw an L-shaped or connected bracket of 3s** - The bracket wraps around from the 3 marker toward the patterns, creating enclosures
+
+For the test input:
+- The 3 is at position (6, 25)
+- Pattern 1: vertical at col 1, rows 0-5 (1 at row 0)
+- Pattern 2: vertical at col 7, rows 5-13 (1s at rows 11, 13)
+- Pattern 3: vertical at col 17, rows 0-9 (1s at rows 0, 2, 4)
+
+The transformation:
+1. Convert all 1s to 2s
+2. Draw bracket of 3s connecting from the 3 position, wrapping around the patterns with vertical segments at cols 0, 6, 8, 18 and horizontal segments at rows 6 and 10
+
+```
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3
+3,8,8,8,8,8,3,2,3,8,8,8,8,8,8,8,8,2,3,8,8,8,8,8,8,8
+3,8,8,8,8,8,3,2,3,8,8,8,8,8,8,8,8,2,3,8,8,8,8,8,8,8
+3,8,8,8,8,8,3,2,3,8,8,8,8,8,8,8,8,2,3,8,8,8,8,8,8,8
+3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+```

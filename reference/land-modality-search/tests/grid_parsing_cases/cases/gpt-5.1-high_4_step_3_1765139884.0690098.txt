@@ -1,0 +1,38 @@
+First infer what is consistent across the three training examples.
+
+1. In all examples, the **size** of the output grid matches exactly the **bounding box of all cells of color 5** in the input:
+   - Example 1:
+     - 5’s from rows 27–29, columns 20–25 → bounding box 3×6 → output 3×6.
+   - Example 2:
+     - 5’s from rows 15–28, columns 20–21 → bounding box 14×2 → output 14×2.
+   - Example 3:
+     - 5’s from rows 2–3 and 17–18, columns 26–28 → bounding box rows 2–18, cols 26–28 → 17×3 → output 17×3.
+
+2. Inside that box, the pattern in the output is determined by the non‑5 colors in the rows that also contain other colored content to the left of the 5s. For rows whose left side is entirely zero (no informative colors), there is effectively no information to project, so those positions in the output are zero.
+
+For the **test input**:
+
+- Positions of color 5:
+  - Top cluster: rows 16–17, columns 7–8.
+  - Bottom cluster: rows 22–23, columns 22–23.
+- Therefore the bounding box of all 5’s is:
+  - Rows: 16 to 23 (inclusive) → height = 8.
+  - Columns: 7 to 23 (inclusive) → width = 17.
+
+So the output must be an **8×17** grid.
+
+Now look at those rows (16–23) in the input:  
+To the left of the 5‑box columns (before column 7) and in the vertical span 16–23, the grid contains only zeros (no 2s or 3s, unlike the training rows that carried patterns into the 5‑box). There is thus no non‑zero pattern to project into the box, so every cell in the output box remains 0.
+
+Hence the output is the 8×17 rectangle of zeros:
+
+```
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+```

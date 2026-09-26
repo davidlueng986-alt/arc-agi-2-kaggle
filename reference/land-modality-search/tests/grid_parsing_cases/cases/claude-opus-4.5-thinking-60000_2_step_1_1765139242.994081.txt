@@ -1,0 +1,45 @@
+Looking at the examples, I need to understand the transformation pattern.
+
+**Analysis of Examples:**
+
+In both examples, there are diagonal lines (slope -1) formed by colored cells (4s or 3s) on a background of 8s. The transformation fills the regions between adjacent parallel diagonal lines with 2s.
+
+The key observations:
+1. Diagonal lines have constant row+col values (slope -1)
+2. Fill occurs between adjacent parallel diagonals
+3. The fill region is bounded by +1 slope lines extending from the endpoints of the diagonals
+4. Fill creates parallelogram-shaped regions between diagonals
+
+**Applying to Test Input:**
+
+Identifying the diagonals (by row+col value):
+- D8: rows 4-5 (positions (4,4), (5,3))
+- D13: rows 4-9 (positions (4,9)→(9,4))  
+- D18: rows 5-13 (positions (5,13)→(13,5))
+- D22: rows 7-15 (positions (7,15)→(15,7))
+
+For each row, I calculate:
+- The position of each diagonal
+- The +1 slope boundary lines from diagonal endpoints
+- Fill between adjacent diagonals within those boundaries
+
+**Output:**
+
+```
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,9,2,2,2,2,9,8,8,8,8,8,8
+8,8,8,9,2,2,8,8,9,2,2,8,8,9,8,8
+8,8,8,8,2,2,2,9,2,2,2,2,9,8,8,8
+8,8,8,8,8,2,9,2,2,2,2,9,2,2,2,9
+8,8,8,8,8,9,2,2,2,2,9,2,2,2,9,8
+8,8,8,8,9,2,2,2,2,9,2,2,2,9,8,8
+8,8,8,8,8,2,2,2,9,2,2,2,9,8,8,8
+8,8,8,8,8,8,2,9,2,2,2,9,8,8,8,8
+8,8,8,8,8,8,9,2,2,2,9,8,8,8,8,8
+8,8,8,8,8,9,2,2,2,9,8,8,8,8,8,8
+8,8,8,8,8,8,2,2,9,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,9,8,8,8,8,8,8,8,8
+```

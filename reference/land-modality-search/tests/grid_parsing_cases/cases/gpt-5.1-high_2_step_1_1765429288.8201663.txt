@@ -1,0 +1,257 @@
+Below is the reasoning I used to construct a consistent transformation and then apply it to the test grid.
+
+---
+
+## 1. What the examples suggest
+
+From the three solved examples:
+
+- The background color is always 8.
+- Colors that appear in **multiple disconnected components** are treated differently from colors that form a **single connected component**.
+- In the outputs:
+  - Colors with **only one connected component** tend to be **left in place** (e.g. color 4 in Example 2, colors 1 and 6 in Example 1, etc.).
+  - Colors with **multiple disconnected components** get **all of their pixels gathered together into a single compact cluster**:
+    - The total number of pixels of that color is preserved.
+    - The new cluster is vertically symmetric (row counts form a palindrome like 1‑3‑3‑1, 2‑3‑3‑2, 2‑4‑4‑2, etc.).
+    - The exact horizontal skew varies but each row’s pixels are **contiguous**.
+  - The rest of the grid is reset to background 8 where nothing is drawn.
+
+So a workable abstraction is:
+
+> - Keep single-component colors as-is.  
+> - For colors with multiple components, erase their original pixels and redraw all their pixels as a single vertically symmetric, compact blob in a central horizontal band, with a shape determined by the total number of pixels of that color.
+
+The exact geometric layouts used in the examples for 6, 8, 10, 12, … pixels all follow the “palindromic row-length” idea:
+
+- 6 pixels → 3 rows: 2,2,2
+- 8 pixels → 4 rows: 1,3,3,1
+- 10 pixels → typically 4 rows: 2,3,3,2
+- 12 pixels → 4 rows: 2,4,4,2  
+  (and by extension we can use 3,4,4,3 for 14 pixels)
+
+Within each row, the pixels are in one solid run (contiguous in columns).
+
+### Where to place the new clusters?
+
+From the examples:
+
+- Clusters for “aggregated” colors are put in **one horizontal band** (4 or so rows) somewhere around the **middle of the grid**, and spaced out horizontally so they don’t overlap.
+- Colors are ordered roughly left‑to‑right based on where their “most central” original components lie (mean column of the component nearest the grid center).
+
+To solve the test case, I adopt the same idea:
+
+1. Choose one central band of 4 rows.
+2. For each multi-component color, choose a canonical vertical pattern based on its pixel count.
+3. Order these colors by the horizontal position of their “anchor” component (closest to grid center).
+4. Place the canonical shapes in that band, spaced horizontally so they do not overlap.
+5. Leave any single-component colors where they were and erase all other non-background pixels.
+
+---
+
+## 2. Analyze the test input
+
+The test grid is 24×26. Background is 8.
+
+### 2.1. Count components and pixels per color
+
+Colors present: 1, 2, 3, 4, 6.
+
+#### Color 1
+
+Coordinates:
+
+- Cluster A (top-right): rows 2–5, col 18–20:
+  - r2: (2,18)
+  - r3: (3,18–20)
+  - r4: (4,18–20)
+  - r5: (5,18)
+  → 8 cells (one component).
+
+- Cluster B (middle): row 11, cols 15–16:
+  - r11: (11,15–16)
+  → 2 cells.
+
+Total N₁ = 8 + 2 = **10** pixels, in **2 components**.
+
+So color 1 will be aggregated.
+
+The “anchor” component (closest to grid center at (12.5,13.5)) is the middle one at (11,15–16); its centroid ≈ (11,15.5).
+
+#### Color 2
+
+Coordinates:
+
+- r4–6, c4–5: vertical 3×2 block (6 cells).
+- r7: (7,3) and (7,6): 2 separated singletons.
+- r12–13: (12,17), (13,17): vertical pair.
+
+Total N₂ = 6 + 2 + 2 = **10** pixels in **4 components**.
+
+Anchor component closest to grid center is the vertical pair at (12–13,17), centroid ≈ (12.5,17).
+
+#### Color 3
+
+Coordinates (only one cluster):
+
+- r14: (14,5–6)
+- r15: (15,4–6)
+- r16: (16,4–5)
+
+Total N₃ = **7** pixels, **1 component**.
+
+Color 3 remains **unchanged**.
+
+#### Color 4
+
+Coordinates:
+
+- Component A (central pair):
+  - r12–13, c14
+- Component B (right cluster):
+  - r15: c21, c24
+  - r16: c21–24
+  - r17: c22–23
+
+Total N₄ = 2 + 8 = **10** pixels, in **2 components**.
+
+Anchor component is the central pair at (12–13,14), centroid ≈ (12.5,14).
+
+#### Color 6
+
+Coordinates:
+
+- Component A (near middle-right):
+  - r14, c15–16 (2 cells)
+- Component B (larger bottom cluster):
+  - r18–19, c13 (2 cells)
+  - r20–21, c10–13 (8 cells)
+  - r22–23, c13 (2 cells)
+
+Total N₆ = 2 + 12 = **14** pixels, in **2 components**.
+
+Anchor component is the middle-right pair at (14,15–16), centroid ≈ (14,15.5).
+
+### 2.2. Which colors aggregate?
+
+- Multi-component: 1, 2, 4, 6 → **aggregate** into new clusters.
+- Single-component: 3 → **leave as-is**.
+
+---
+
+## 3. Choose canonical shapes for each aggregated color
+
+We use a 4-row, vertically symmetric pattern (palindromic row counts), with contiguous runs per row.
+
+- For N = 10 (colors 1, 2, 4), use pattern **[2,3,3,2]**:
+  - Over 4 consecutive rows:
+    - Row pattern of lengths: 2, 3, 3, 2.
+
+Canonical layout for a center column `c`:
+
+- Row r (top of band):          columns c, c+1     → 2 cells
+- Row r+1 and r+2 (middle):     columns c−1..c+1   → 3 cells
+- Row r+3 (bottom):             columns c, c+1     → 2 cells
+
+- For N = 14 (color 6), use pattern **[3,4,4,3]**:
+  - Layout for center column `c`:
+
+- Row r:                        columns c−1..c+1   → 3 cells
+- Rows r+1 and r+2:             columns c−1..c+2   → 4 cells
+- Row r+3:                      columns c−1..c+1   → 3 cells
+
+Total 3 + 4 + 4 + 3 = 14.
+
+### 3.1. Select common vertical band
+
+Pick rows 9–12 as the aggregation band; it is above the original color-3 cluster (rows 14–16) and near the vertical middle.
+
+So for all aggregated colors, the 4-row band is rows 9,10,11,12.
+
+### 3.2. Horizontal ordering and centers
+
+Order aggregated colors left→right by the x-coordinate of their anchor component:
+
+- Color 4: anchor at col 14.
+- Color 1: anchor at col 15.5.
+- Color 6: anchor at col 15.5 (same; but lower rows).
+- Color 2: anchor at col 17.
+
+Sorted: **4, 1, 6, 2** (ties broken by anchor row / arbitrary but consistent).
+
+Now assign non-overlapping center columns in this order:
+
+- Color 4 → center column c₄ = 6
+- Color 1 → center column c₁ = 11
+- Color 6 → center column c₆ = 17
+- Color 2 → center column c₂ = 23
+
+All widths fit in 1…26 and ranges do not overlap:
+
+- Color 4, N=10, pattern [2,3,3,2], c₄ = 6:
+  - Row 9:  c6–7
+  - Row 10: c5–7
+  - Row 11: c5–7
+  - Row 12: c6–7
+
+- Color 1, N=10, pattern [2,3,3,2], c₁ = 11:
+  - Row 9:  c11–12
+  - Row 10: c10–12
+  - Row 11: c10–12
+  - Row 12: c11–12
+
+- Color 6, N=14, pattern [3,4,4,3], c₆ = 17:
+  - Row 9:  c16–18
+  - Row 10: c16–19
+  - Row 11: c16–19
+  - Row 12: c16–18
+
+- Color 2, N=10, pattern [2,3,3,2], c₂ = 23:
+  - Row 9:  c23–24
+  - Row 10: c22–24
+  - Row 11: c22–24
+  - Row 12: c23–24
+
+---
+
+## 4. Construct the output grid
+
+Start from an all-8 grid (24×26).
+
+1. **Keep color 3 cluster exactly as in the input**:
+
+- Row 14: columns 5–6 = 3
+- Row 15: columns 4–6 = 3
+- Row 16: columns 4–5 = 3
+
+2. **Place aggregated shapes for colors 4, 1, 6, 2** in rows 9–12 as above.
+
+Everything else remains 8.
+
+### Final output grid
+
+Row by row (24 rows, each 26 columns):
+
+1. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+2. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+3. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+4. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+5. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+6. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+7. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+8. `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+9. `8,8,8,8,8,4,4,8,8,8,1,1,8,8,8,6,6,6,8,8,8,8,2,2,8,8`
+10.`8,8,8,8,4,4,4,8,8,1,1,1,8,8,8,6,6,6,6,8,8,2,2,2,8,8`
+11.`8,8,8,8,4,4,4,8,8,1,1,1,8,8,8,6,6,6,6,8,8,2,2,2,8,8`
+12.`8,8,8,8,8,4,4,8,8,8,1,1,8,8,8,6,6,6,8,8,8,8,2,2,8,8`
+13.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+14.`8,8,8,8,3,3,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+15.`8,8,8,3,3,3,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+16.`8,8,8,3,3,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+17.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+18.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+19.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+20.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+21.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+22.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+23.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+24.`8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`

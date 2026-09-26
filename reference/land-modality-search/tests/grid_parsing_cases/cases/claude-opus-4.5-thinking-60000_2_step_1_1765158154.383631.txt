@@ -1,0 +1,56 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+1. **Key elements**: A single "3" marker and horizontal/vertical patterns containing "1"s and "2"s
+2. **Transformation rules**:
+   - All "1"s in patterns get replaced with "2"s
+   - L-shaped paths of "3"s are drawn from the marker, wrapping around the patterns
+   - The number of "1"s in each pattern determines:
+     - **Turn distance**: (count of 1s + 1) rows/columns before the pattern
+     - **Extension distance**: (count of 1s + 1) past the pattern's edge
+   - **Direction**: If 1s are on the left/start → wrap around the right/end, and vice versa
+
+**Analyzing the test input:**
+- 3 marker at (0, 8)
+- Pattern 1 at row 3: 1 one at column 15 (right) → wrap left, turn at row 1, extend to column 2
+- Pattern 2 at row 9: 2 ones at columns 0,2 (left) → wrap right, turn at row 6, extend to column 9
+- Pattern 3 at row 17: 3 ones at columns 11,13,15 (right) → wrap left, turn at row 13, extend to column 2
+- Pattern 4 at row 27: 4 ones at columns 0,2,4,6 (left) → wrap right, turn at row 22, extend to column 13
+
+**Path trace:**
+- (0,8)→(1,8) vertical, then (1,2-8) horizontal
+- (1,2)→(6,2) vertical, then (6,2-9) horizontal  
+- (6,9)→(13,9) vertical, then (13,2-9) horizontal
+- (13,2)→(22,2) vertical, then (22,2-13) horizontal
+- (22,13)→(28,13) vertical
+
+```
+8,8,8,8,8,8,8,8,3,8,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,2,2,2,2,2,2,2,2,2,2,2,2
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+2,2,2,2,2,2,2,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,3,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,3,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,2,2,2,2,2,2,2,2,2,2
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+2,2,2,2,2,2,2,2,2,8,8,8,8,3,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,3,8,8
+```

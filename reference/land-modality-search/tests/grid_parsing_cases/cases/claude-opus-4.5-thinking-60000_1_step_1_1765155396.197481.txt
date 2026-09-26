@@ -1,0 +1,55 @@
+Looking at the examples, I need to understand how shapes are being transformed.
+
+**Analysis of Example 1:**
+- Grid has background color 0, with objects in colors 1, 2, 3, 4
+- Objects in the upper-left area (colors 2, 4) move to the bottom
+- Objects in the lower-left area (color 3) move to the top  
+- Objects on the right side (color 1) move to the top
+- Shapes preserve their internal structure and horizontal position
+
+**Analysis of Example 2:**
+- Similar pattern: left-side objects swap vertically (upper↔lower)
+- Right-side objects stay at their relative vertical position (upper→top, lower→bottom)
+- Central objects move to nearest edge
+
+**The transformation rule:**
+1. Objects on the LEFT side swap vertically (upper-left→bottom, lower-left→top)
+2. Objects on the RIGHT side stay at their relative position (upper→top, lower→bottom)
+3. Objects align to the top (row 0) or bottom (last row) edges
+
+**Applying to test input (25×25 grid, background=1):**
+- Color 2 (rows 2-4, cols 3-7): upper-left → moves to BOTTOM
+- Color 5 (rows 3-7, cols 19-23): upper-right → stays at TOP
+- Color 3 left instance (rows 11-15, cols 4-8): center-left → goes to TOP
+- Color 3 right instance (rows 11-15, cols 18-20): center-right → goes to BOTTOM
+- Color 4 (rows 19-21, cols 12-15): lower-center → goes to BOTTOM
+
+**Output:**
+
+```
+1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,1,1
+1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1
+1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,1,1,1,1,1,5,1,5,1,1
+1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1
+1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,5,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1
+1,1,1,1,1,2,2,2,1,1,1,1,4,1,1,1,1,1,3,3,3,1,1,1,1
+1,1,1,1,1,2,1,1,1,1,1,1,4,4,4,4,1,1,1,1,3,1,1,1,1
+1,1,1,2,2,2,1,1,1,1,1,1,1,4,1,1,1,1,1,1,3,1,1,1,1
+```

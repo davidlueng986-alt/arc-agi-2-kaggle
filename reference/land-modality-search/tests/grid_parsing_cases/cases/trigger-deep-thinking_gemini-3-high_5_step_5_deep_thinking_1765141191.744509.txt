@@ -1,0 +1,69 @@
+The transformation rule involves creating a new grid based on the "Mask" (Top section, rows 0-9) and filling its "Holes" (pixels with value 1) with a sequence of "Objects" extracted from the "Source" (Bottom section, rows 11-24).
+
+**Logic:**
+1.  **Separation**: The input grid is split into a Mask (rows 0-9) and a Source (rows 11-24). The Mask background is 3, and Holes are 1. The Source background is 1.
+2.  **Source Tape Construction**: For each conceptual row `i` of the output (corresponding to Mask row `i`), we construct a "Tape" of objects from the corresponding Source rows.
+    *   The Source has two sets of objects: Top-Source (rows 11-17, corresponding to Output rows 2-8) and Bottom-Source (rows 18-24, corresponding to Output rows 2-8).
+    *   For a given row, we scan the Source row left-to-right and collect all non-background pixels into a sequence (Tape).
+    *   Row 1 of Output corresponds to Source row 11 (Top-Source) only (as Bottom-Source starts at row 18, mapping to Output row 2).
+    *   Rows 2-8 of Output correspond to combining the Top-Source row (11+i-2) and Bottom-Source row (18+i-2).
+3.  **Filling**: For each row of the Mask, we scan left-to-right. Whenever we encounter a continuous segment of 1s (a Hole), we calculate its width `W`. We then take the next `W` pixels from our constructed Tape and fill the Hole. If the Tape runs out, we fill with 0 (or leave as 1/background if implied).
+4.  **Geometry**: The Output Grid is the same size as the Mask (25x25), where the background (3) is preserved, and the 1s are replaced by the Source content.
+
+**Application to Test Input:**
+
+*   **Row 0**: Mask is all 3s. Output is all 3s.
+*   **Row 1**: Holes at cols 3-4, 7-8, 13, 22-23. Source Row 11 (`9,9`, `6,6,6,6,6`, `4,4`, `2,2,2`). Tape: `9,9,6,6,6,6,6,4,4,2,2,2`.
+    *   Fill 3-4: `9,9`.
+    *   Fill 7-8: `6,6`.
+    *   Fill 13: `6`.
+    *   Fill 22-23: `6,6`.
+*   **Row 2**: Holes at 0-8, 11-15, 18, 20-23. Source Row 11 (`9,9`, `6...6`, `4,4`, `2...2`) + Row 18 (`4,4`, `7...7`). Tape: `9,9,6,6,6,6,6,4,4,2,2,2,4,4,7,7,7,7`.
+    *   Fill 0-8: `9,9,6,6,6,6,6,4,4`.
+    *   Fill 11-15: `2,2,2,4,4`.
+    *   Fill 18: `7`.
+    *   Fill 20-23: `7,7,7` (and 0 for missing).
+*   **Row 3**: Holes same as Row 2. Source Row 12 (`9,9`, `6,8,6,8,6`, `4,4`, `2,5,2`) + Row 19 (`8,8`... wait, `4,4,7,7,7,7,8,8`). Tape: `9,9,6,8,6,8,6,4,4,2,5,2,4,4,7,7,7,7,8,8`.
+    *   Fill 0-8: `9,9,6,8,6,8,6,4,4`.
+    *   Fill 11-15: `2,5,2,4,4`.
+    *   Fill 18: `7`.
+    *   Fill 20-23: `7,7,7,8`.
+*   **Row 4**: Holes at 0-4, 7-8, 11-15, 18, 20-23. Source Row 13 + Row 20 (`4,4,5,5,6,8,8`). Tape: `9,9,6,6,8,6,6,4,4,2,2,2,4,4,5,5,6,8,8`.
+    *   Fill 0-4: `9,9,6,6,8`.
+    *   Fill 7-8: `6,6`.
+    *   Fill 11-15: `4,4,2,2,2`.
+    *   Fill 18: `4`.
+    *   Fill 20-23: `4,5,5,6`.
+*   **Row 5**: Holes same. Source Row 14 + Row 21 (`8,8,4,4,0,1,0,5,5,6`). Tape: `9,9,6,8,6,8,6,4,4,2,5,2,8,8,4,4,0,1,0,5,5,6`.
+    *   Fill 0-4: `9,9,6,8,6`.
+    *   Fill 7-8: `8,6`.
+    *   Fill 11-15: `4,4,2,5,2`.
+    *   Fill 18: `8`.
+    *   Fill 20-23: `8,4,4,0`.
+*   **Row 6**: Holes same. Source Row 15 + Row 22 (`6`). Tape: `9,9,6,6,8,6,6,4,4,2,2,2,6`.
+    *   Fill 0-4: `9,9,6,6,8`.
+    *   Fill 7-8: `6,6`.
+    *   Fill 11-15: `4,4,2,2,2`.
+    *   Fill 18: `6`.
+    *   Fill 20-23: `0,0,0,0`.
+*   **Row 7**: Holes same. Source Row 16 (`9,9`, `6...6`, `4,4`, `2,5,2`). Tape: `9,9,6,6,6,6,6,4,4,2,5,2`.
+    *   Fill 0-4: `9,9,6,6,6`.
+    *   Fill 7-8: `6,6`.
+    *   Fill 11-15: `4,4,2,5,2`.
+    *   Fill 18: `0`.
+    *   Fill 20-23: `0,0,0,0`.
+*   **Row 8**: Holes 0-8, 11-15... Source Row 17 (`9,9`, `4,4`, `9,9`, `2,2,2`).
+    *   Fill 0-8: `9,9,4,4,9,9,2,2,2`.
+    *   Fill 11-15: `0,0,0,0,0`.
+*   **Row 9**: All 3s (Holes at 0-8, but tape empty). Fill with 0s/3s.
+
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,9,9,3,3,6,6,3,3,3,3,6,3,3,3,3,3,3,3,3,6,6,3
+9,9,6,6,6,6,6,4,4,3,3,2,2,2,4,4,3,3,7,3,7,7,7,0,3
+9,9,6,8,6,8,6,4,4,3,3,2,5,2,4,4,3,3,7,3,7,7,7,8,3
+9,9,6,6,8,3,3,6,6,3,3,4,4,2,2,2,3,3,4,3,4,5,5,6,3
+9,9,6,8,6,3,3,8,6,3,3,4,4,2,5,2,3,3,8,3,8,4,4,0,3
+9,9,6,6,8,3,3,6,6,3,3,4,4,2,2,2,3,3,6,3,0,0,0,0,3
+9,9,6,6,6,3,3,6,6,3,3,4,4,2,5,2,3,3,0,3,0,0,0,0,3
+9,9,4,4,9,9,2,2,2,3,3,0,0,0,0,0,3,3,0,3,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3

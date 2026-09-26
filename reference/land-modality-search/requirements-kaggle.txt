@@ -1,0 +1,18 @@
+# --- Core model clients ---
+openai==2.11.0
+anthropic
+httpx==0.28.1
+
+# Gemini client — requires >=1.52.0 for thinking_level
+google-genai>=1.52.0
+
+# --- Utilities used by the solver ---
+
+docstring_parser
+jiter
+
+# Use pydantic v2 (the solver assumes v2 behavior)
+pydantic>=2,<3
+
+# Needed to satisfy Kaggle's resolver warning from bigframes
+google-cloud-bigquery-storage>=2.30.0,<3.0.0

@@ -1,0 +1,30 @@
+Looking at the examples, I need to understand the transformation pattern:
+
+**Example 1:** The input has two regions - left side with a maroon (9) pattern on yellow (4) background, and right side with colored objects on yellow background. The output keeps the maroon pattern but fills the "holes" (where 4s were) with the colored objects from the corresponding positions.
+
+**Example 2:** The input has a top region with colored objects on blue (8) background, and a bottom region with a shape made of blue (8) on red (2) background. The output shows the bottom region's shape with objects from corresponding positions in the top region filling the shape.
+
+**Pattern:** 
+1. One region provides a "template" (shape made with one color on background)
+2. Other region provides colored objects
+3. Output shows the template, but where the template has "shape color", display the object from the corresponding position (if not background)
+
+**For the test input:**
+- Template: Rows 0-9 (shape made of 1s on background 3)
+- Objects: Rows 10-24 (colored objects on background 1)
+- Row correspondence: Output row r uses template row r and objects row r+10
+
+Applying the transformation: Where template=3, output=3. Where template=1, if objects≠1, output that object; otherwise output=3.
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,6,6,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,9,9,3,3,3,3,6,8,3,3,6,3,3,3,4,3,3,3,3,5,2,3,3,3
+3,9,9,3,3,3,3,6,6,3,3,6,3,3,3,4,4,3,3,2,2,2,3,3,3
+3,9,9,3,3,3,3,6,8,3,3,6,3,3,3,4,4,3,3,2,5,2,3,3,3
+3,9,9,3,3,3,3,6,6,8,6,6,3,3,3,4,3,3,3,3,3,3,3,3,3
+3,9,9,3,3,3,3,6,6,6,6,6,3,3,3,4,3,3,3,3,3,3,3,3,3
+3,9,9,3,4,3,3,3,3,3,3,3,3,3,3,9,3,3,3,3,3,3,3,3,3
+3,9,9,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+```

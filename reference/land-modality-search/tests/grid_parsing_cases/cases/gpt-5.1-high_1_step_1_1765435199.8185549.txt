@@ -1,0 +1,190 @@
+**Reasoning**
+
+1. **What is happening in the examples**
+
+   In all three training examples there are two key structures:
+
+   - A small, thin **“legend” block** of mixed colors with thickness 2 (either 2×N or N×2), separate from the main shapes.
+   - Larger **single‑color shapes** that form *closed loops* (donuts / frames) around regions of 0s.
+
+   The transformation:
+
+   1. Use the legend block to build a **color mapping** from “frame colors” to “fill colors”.
+   2. For each mapped frame color, find its shapes that enclose 0‑regions (holes) and **fill those interior 0s** with the mapped color.
+
+   Details:
+
+   ### 1. Detecting the legend and extracting the mapping
+
+   Look at connected components of **non‑zero** cells (ignoring color):
+
+   - In each training grid there is exactly one multi‑cell component whose **bounding box has min(height, width) = 2** and both height and width > 1.  
+     That thin component is the **legend**.
+
+   Orientation rule:
+
+   - If legend height = 2 → it’s a 2×N block → use it **vertically**: map from the first row to the second row, columnwise.
+   - If legend width = 2 and height > 2 → it’s an N×2 block → use it **horizontally**: map from the first column to the second column, rowwise.
+
+   Then for each aligned pair of legend cells `(from, to)` we create a mapping `M[from] = to`.
+
+   Applied to training examples:
+
+   - **Example 1**  
+     Legend = rows 0–1, cols 7–11 (2×5), so vertical orientation.  
+     Row 0: 3,4,6,9,5  
+     Row 1: 3,6,7,2,9  
+     ⇒ Mapping:
+       - 3 → 3
+       - 4 → 6
+       - 6 → 7
+       - 9 → 2
+       - 5 → 9
+
+   - **Example 2**  
+     Legend = rows 0–3, cols 0–1 (4×2), so horizontal orientation.  
+     Col 0: 2,4,6,8  
+     Col 1: 6,5,8,1  
+     ⇒ Mapping:
+       - 2 → 6
+       - 4 → 5
+       - 6 → 8
+       - 8 → 1
+
+   - **Example 3**  
+     Legend = rows 0–1, cols 1–2 (2×2), so vertical orientation.  
+     Row 0: 2,6  
+     Row 1: 7,1  
+     ⇒ Mapping:
+       - 2 → 7
+       - 6 → 1
+
+   ### 2. Finding and filling holes for mapped colors
+
+   For each color `c` that appears as a key in the mapping `M`:
+
+   1. Find each **connected component** of cells of color `c` (4‑connected).
+   2. Inside its **bounding box**, treat `c` as walls; treat `0` cells as empty space; other colors (if any inside that box) are treated like background (here, effectively all non‑zero inside the frames are just the frame color).
+   3. Perform a flood fill of zeros from the **outside** of that bounding box (or from any zero on the box boundary). Zeros reachable from the outside are *not* holes.
+   4. Any remaining 0‑regions that are **not reachable** from outside are enclosed **holes**.
+   5. Fill all those hole cells with color `M[c]`.
+
+   This exactly matches the examples:
+
+   - **Example 1**
+     - Legend mapping includes 3 → 3 and 4 → 6, etc.
+     - The 4‑rectangle at the top‑left has a small interior 0‑region → filled with 6.
+     - The irregular 3‑shape at mid‑left has a closed cavity of 0s → filled with 3.
+     - The 7‑shape has no mapping in `M` → its internal 0s (if any) are left unchanged.
+
+   - **Example 2**
+     - Legend mapping includes 8 → 1 and 4 → 5, but not 5.
+     - 8‑frame (4×4 rectangle) encloses a 2×2 hole → filled with 1.
+     - 4‑frame at bottom‑right encloses two single‑cell holes → each filled with 5.
+     - 5‑frame in the middle **also** encloses an interior 0‑region, but color 5 is not mapped → it is left unfilled.
+
+   - **Example 3**
+     - Legend mapping includes 2 → 7, 6 → 1.
+     - Right‑hand 2‑rectangle (4×4) has two interior 0 cells fully surrounded by 2s → filled with 7.
+     - Left 4‑rectangle has an interior 0‑region but color 4 is not mapped → unchanged.
+
+   So the rule is consistent across all given examples.
+
+---
+
+2. **Applying the rule to the test input**
+
+   #### 2.1. Find the legend and mapping
+
+   Test grid bottom rows:
+
+   Row 11: `5,4,6,7,8,0,0,0,0,2,0,2,0`  
+   Row 12: `9,8,3,1,2,0,0,0,0,0,2,0,0`
+
+   The connected component of non‑zero cells in rows 11–12, cols 0–4 is a 2×5 block:
+
+   ```
+   5 4 6 7 8
+   9 8 3 1 2
+   ```
+
+   - Its bounding box has height 2, width 5 → legend, vertical orientation.
+   - Mapping from row 11 (top of legend) to row 12 (bottom):
+
+     - 5 → 9
+     - 4 → 8
+     - 6 → 3
+     - 7 → 1
+     - 8 → 2
+
+   So `M = {5:9, 4:8, 6:3, 7:1, 8:2}`.
+
+   #### 2.2. Find shapes of mapped colors with holes
+
+   We only need to inspect colors in `M`’s domain: `{5,4,6,7,8}`.
+
+   - Color 4: only at (11,1), a single cell → no hole.
+   - Color 6: only at (11,2), single cell → no hole.
+   - Color 7: only at (11,3), single cell → no hole.
+   - Color 8: at (11,4) and (12,1), both isolated singletons → no holes.
+   - **Color 5**: one large cluster in the middle plus the single legend 5 at (11,0).
+
+     The large 5‑cluster (central) has bounding box rows 5–9, cols 7–12. In that box, using `#` for 5 and `.` for 0:
+
+     ```
+     r5: . # # # . .
+     r6: # . . . # .
+     r7: # . . . . #
+     r8: . # # # # #
+     r9: . # . . . .
+     ```
+
+     Now detect 0‑regions:
+
+     - Boundary zeros (touching the box edge) include cells like (5,7), (5,11), (5,12), (9,7), (9,9–12), (8,7), (6,12).
+     - Starting flood fill from these boundary zeros, we can reach all “outside” 0s but **cannot reach** the interior cluster:
+
+       Interior zero cells (not connected to boundary through zeros):  
+       `(6,8), (6,9), (6,10), (7,8), (7,9), (7,10), (7,11)`
+
+     These 7 cells form a closed cavity fully enclosed by 5s. Thus they are a **hole inside the 5‑shape**.
+
+     The isolated 5 at (11,0) is a 1×1 component → no interior.
+
+   So only one hole region must be filled: the 7 cells above, inside the central 5‑shape.
+
+   #### 2.3. Fill holes using the legend mapping
+
+   From the legend we have: `5 → 9`.
+
+   Therefore we change all hole cells inside the 5‑component from 0 to 9:
+
+   - (6,8) → 9
+   - (6,9) → 9
+   - (6,10) → 9
+   - (7,8) → 9
+   - (7,9) → 9
+   - (7,10) → 9
+   - (7,11) → 9
+
+   All other cells remain exactly as in the input.
+
+---
+
+**Final output grid**
+
+Row by row:
+
+0. `0,1,1,1,1,1,0,0,3,3,3,3,0`  
+1. `0,1,0,0,0,1,0,0,3,0,0,3,0`  
+2. `0,1,1,0,0,1,0,0,3,0,0,3,0`  
+3. `0,0,1,1,1,1,0,0,3,3,3,3,0`  
+4. `0,0,0,0,0,0,0,0,0,0,0,0,0`  
+5. `0,0,0,0,0,0,0,0,5,5,5,0,0`  
+6. `0,0,2,0,0,0,0,5,9,9,9,5,0`  
+7. `0,2,0,2,0,0,0,5,9,9,9,9,5`  
+8. `0,0,2,0,0,0,0,0,5,5,5,5,5`  
+9. `0,0,0,0,0,0,0,0,5,0,0,0,0`  
+10.`0,0,0,0,0,0,0,0,0,0,2,0,0`  
+11.`5,4,6,7,8,0,0,0,0,2,0,2,0`  
+12.`9,8,3,1,2,0,0,0,0,0,2,0,0`

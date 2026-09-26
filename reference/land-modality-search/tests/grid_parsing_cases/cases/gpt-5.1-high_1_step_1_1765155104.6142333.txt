@@ -1,0 +1,198 @@
+**Reasoning**
+
+1. **Identify the special pattern color and where it is placed**
+
+   - In both solved examples there is exactly one horizontal block of color `4` in the input.
+   - It is contiguous and lies on a border row:
+     - Example 1: on the **bottom** row, columns 12–15.
+     - Example 2: on the **bottom** row, columns 3–5.
+   - In the outputs:
+     - Extra copies of this block appear in the **same columns** on many other rows, sometimes still in color `4`, sometimes recolored to `3`.
+     - Additionally, whole rows of the main object color are recolored to `3` on some of those rows.
+
+   For the **test input**, we have:
+   - Unique `4`-block on **row 1**, columns 8–15 (8 consecutive `4`s).
+   - So the template is width `w = 8`, columns `c = 8..15`, and it is on the **top** border.
+
+2. **Find the main object color and background**
+
+   - Example 1: background = `1`, main object color = `8`, template color = `4`, new color = `3`.
+   - Example 2: background = `8`, main object color = `2`, template color = `4`, new color = `3`.
+   - Test: background is clearly `8` (most frequent), object color is `6`, template is `4`. `3` does not appear in input – it will be created.
+
+3. **Vertical pattern of template copies**
+
+   Look at Example 1 & 2 outputs restricted to the template’s columns.
+
+   Define `r0` as the row index of the template (where the original `4` block is).
+
+   For Example 2 (height 29, template on row 29):
+   - Let `d = r0 - r` (distance **upwards** from the template row).
+   - At rows where:
+     - `d mod 6 = 0` or `2`: we see the template (same width) in color `4`.
+     - `d mod 6 = 4`: we see the template in color `3`.
+     - Otherwise: those columns are untouched.
+
+   Same pattern in Example 1.
+
+   So the rule is:
+
+   > From the template row, going **into the grid** (away from the border), every 6 rows we repeat a 3-row pattern in the same columns:
+   > - at offset `d ≡ 0 (mod 6)` : draw the template in color `4`,
+   > - at offset `d ≡ 2 (mod 6)` : draw the template in color `4`,
+   > - at offset `d ≡ 4 (mod 6)` : draw the template in color `3`,
+   > - other rows untouched.
+   
+   In the training examples the template is on the **bottom**, so “into the grid” means going **upwards** (decreasing row index).  
+   In the test, the template is on the **top**, so “into the grid” means going **downwards** (increasing row index).
+
+   For the test (height 25, `r0 = 1`), define `d = r - r0 = r - 1` (distance **downwards** from the top template).
+
+   Then:
+   - Rows with `d mod 6 = 0` or `2` (i.e. `r = 1,3,7,9,13,15,19,21,25`) get a copy of the 4-block (8 cells) at columns 8–15 in color `4`.
+   - Rows with `d mod 6 = 4` (i.e. `r = 5,11,17,23`) get the same 8-cell block at columns 8–15 in color `3`.
+
+4. **Recoloring the main object on the “3-rows”**
+
+   In the examples, the rows where the template is colored `3` (i.e. `d mod 6 = 4`) also show:
+
+   - All cells of the main object color on that row are recolored to `3`.
+   - Example 2: on rows 7,13,19,25 (the `3`-rows), **all `2`s** in those rows become `3`.
+   - Example 1: on rows 7,13,19,25 (similarly spaced), **all `8`s** on those rows become `3`.
+
+   The 3-colored template block just overwrites whatever was in its columns, including possibly some background.
+
+   So in the test, for rows with `d mod 6 = 4` (`r = 5,11,17,23`):
+
+   - Recolor every `6` on that row to `3`.
+   - Then overwrite columns 8–15 with `3` (the 8-cell template block).
+
+   For other rows (even those with a `4`-block) we **do not** recolor 6’s except where directly overwritten by the 4-block.
+
+5. **Apply the rule to the test grid**
+
+   Columns of the template: 8–15, width 8.
+
+   Row by row (input → output):
+
+   - **Row 1**, `d=0` → 4-block row  
+     Already is the template row; remains:
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 2**, `d=1` → unchanged  
+     `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 3**, `d=2` → 4-block at c8–15  
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 4**, `d=3` → unchanged  
+     `8,8,8,8,8,8,8,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 5**, `d=4` → 3-row  
+     - Recolor all `6` to `3`.  
+       (6s at c4–11 and c16–20)
+     - Overwrite c8–15 with `3`.  
+     Output:
+     `8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8`
+
+   - **Row 6**, `d=5` → unchanged  
+     `8,8,8,8,6,6,6,6,6,6,8,8,8,6,6,6,6,6,6,6,6,6,8,8,8`
+
+   - **Row 7**, `d=6≡0` → 4-block  
+     Overwrite c8–15 with `4`:  
+     `8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,6,6,6,6,6,8,8,8`
+
+   - **Row 8**, `d=7` → unchanged  
+     `8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,8,6,6,6,8,8,8,8`
+
+   - **Row 9**, `d=8≡2` → 4-block  
+     Overwrite c8–15 with `4`:  
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,6,8,8,8,8,8,8,8`
+
+   - **Row 10**, `d=9` → unchanged  
+     `8,8,8,8,8,6,8,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8`
+
+   - **Row 11**, `d=10≡4` → 3-row  
+     Recolor all `6` to `3` (c4–15), then template 3-block at c8–15:  
+     `8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 12**, `d=11` → unchanged  
+     `8,8,8,8,8,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 13**, `d=12≡0` → 4-block  
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 14**, `d=13` → unchanged  
+     `8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6,6,8,8,8`
+
+   - **Row 15**, `d=14≡2` → 4-block  
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,6,6,6,6,6,6,8,8`
+
+   - **Row 16**, `d=15` → unchanged  
+     `8,8,8,8,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,6,6,8,8,8`
+
+   - **Row 17**, `d=16≡4` → 3-row  
+     Recolor all `6` to `3` (c4–11 and c19–22), then template 3-block at c8–15:  
+     `8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,3,3,3,3,8,8,8`
+
+   - **Row 18**, `d=17` → unchanged  
+     `8,8,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6`
+
+   - **Row 19**, `d=18≡0` → 4-block  
+     `8,8,8,8,6,6,6,4,4,4,4,4,4,4,4,8,8,8,6,6,6,6,6,6,6`
+
+   - **Row 20**, `d=19` → unchanged  
+     `8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6`
+
+   - **Row 21**, `d=20≡2` → 4-block  
+     Overwrite c8–15 with 4:  
+     `8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,8,8,6,6,6,6,6,8`
+
+   - **Row 22**, `d=21` → unchanged  
+     `8,8,6,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8`
+
+   - **Row 23**, `d=22≡4` → 3-row  
+     Recolor all `6` to `3` (c6–16), then template 3-block at c8–15:  
+     `8,8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8`
+
+   - **Row 24**, `d=23` → unchanged  
+     `8,8,8,8,8,6,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8`
+
+   - **Row 25**, `d=24≡0` → 4-block  
+     `8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,8,8,8,8,8,8,8,8`
+
+No other rows are altered.
+
+---
+
+## Final output grid
+
+Here is the completed output grid for the test input:
+
+```
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8
+8,8,8,8,6,6,6,6,6,6,8,8,8,6,6,6,6,6,6,6,6,6,8,8,8
+8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,6,6,6,6,6,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,8,6,6,6,8,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,6,8,8,8,8,8,8,8
+8,8,8,8,8,6,8,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8
+8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6,6,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,6,6,6,6,6,6,8,8
+8,8,8,8,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,6,6,8,8,8
+8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,3,3,3,3,8,8,8
+8,8,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6
+8,8,8,8,6,6,6,4,4,4,4,4,4,4,4,8,8,8,6,6,6,6,6,6,6
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6
+8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,8,8,6,6,6,6,6,8
+8,8,6,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,6,6,6,6,6,6,6,6,6,6,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,8,8,8,8,8,8,8,8
+```

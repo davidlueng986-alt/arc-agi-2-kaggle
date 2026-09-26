@@ -1,0 +1,54 @@
+Looking at the examples, I need to identify the transformation pattern.
+
+**Analysis of Examples:**
+
+1. Each input has boundary markers forming a frame around a main content region
+2. The main region is bounded by colored borders (4s, 6s, 3s, 2s) that indicate edges
+3. There's a scatter of 5s indicating transformation direction
+4. The scattered colored values (5s) and doubled border values seem to indicate the transformation type
+
+**Transformation Pattern:**
+
+For Examples 2 & 3 (square or simple regions): Counter-clockwise 90° rotation
+- Formula: (i, j) → (width-1-j, i)
+
+For Example 1 (non-square with specific boundary arrangement): CCW 90° + horizontal flip
+- Formula: (i, j) → (width-1-j, height-1-i)
+
+**Test Input Analysis:**
+
+- 2s form TOP (row 0) and LEFT (col 3) boundaries
+- 3s form RIGHT (col 28) and BOTTOM (row 16) inner boundaries  
+- Main region: rows 4-15, cols 4-23 (12 rows × 20 cols)
+- This matches Example 1's boundary pattern (one color top/left, another bottom/right)
+
+**Applying Transformation:**
+
+Using (i, j) → (19-j, 11-i), where the input main region is 12×20:
+- Output dimensions: 20 rows × 12 cols
+- For each output[r][c] = input[11-c][19-r]
+
+Extracting the main region and applying the transformation:
+
+```
+4,4,4,4,4,0,4,4,0,0,4,4
+4,4,4,4,4,4,4,4,4,4,4,0
+4,9,9,4,7,7,7,7,7,7,7,0
+4,9,9,4,7,4,4,4,4,4,4,0
+4,9,9,4,7,6,4,6,6,6,6,4
+4,9,9,4,7,6,4,4,4,6,6,4
+4,9,9,4,7,4,4,4,4,6,6,4
+4,9,9,4,7,4,4,4,4,4,4,4
+4,9,9,4,7,4,4,4,4,6,4,4
+4,9,9,4,7,4,4,4,4,4,4,4
+4,9,9,4,7,4,4,6,6,6,6,6
+4,4,4,4,7,4,4,6,4,4,4,4
+4,9,9,4,7,4,4,6,4,4,4,4
+4,9,9,4,7,4,4,6,4,4,4,0
+4,9,9,4,7,4,4,6,4,4,0,0
+4,4,4,4,7,4,4,4,4,4,0,0
+4,9,9,4,7,6,4,4,4,4,0,0
+4,8,8,4,7,4,4,4,4,4,4,0
+4,8,8,4,7,7,7,7,7,7,7,7
+4,4,4,4,4,4,4,4,4,4,4,4
+```

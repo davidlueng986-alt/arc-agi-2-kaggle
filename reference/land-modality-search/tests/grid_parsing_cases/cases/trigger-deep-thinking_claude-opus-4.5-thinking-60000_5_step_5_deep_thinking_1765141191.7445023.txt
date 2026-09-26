@@ -1,0 +1,25 @@
+Looking at the examples, I can see the pattern:
+
+1. **Example 1**: The grid is split vertically - left side (cols 0-6) is a template with 9/4 pattern, right side (cols 7-14) has colored objects on a 4 background. The output fills the template's "holes" (4s) with colors from corresponding positions in the content region, with 9 becoming the background where no color exists.
+
+2. **Example 2**: The grid is split horizontally - top rows have content with colored objects on an 8 background, bottom rows have a template with 2/8 pattern. The output fills the template's "holes" (8s) with colors from the content region.
+
+**For the test input:**
+- Rows 0-9 form the template (3 = wall, 1 = hole)
+- Row 10 is a separator (all 1s)
+- Rows 11-24 contain the content (1 = background, with colored objects: 9s, 6s, 4s, 7s, 8s, 2s, 5s, etc.)
+
+The transformation maps template position (r, c) to content position (r+11, c). Where the template has a 1 (hole), fill with the content color at that position; if content is background (1), use the wall color (3).
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,6,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,9,9,3,3,3,3,6,6,3,3,6,3,3,3,4,3,3,3,3,2,2,3,3,3
+3,9,9,3,3,3,3,6,8,3,3,6,3,3,3,4,4,3,3,2,5,2,3,3,3
+3,9,9,3,3,3,3,6,6,3,3,6,3,3,3,4,4,3,3,2,2,2,3,3,3
+3,9,9,3,3,3,3,6,6,6,6,6,3,3,3,4,3,3,3,3,3,3,3,3,3
+3,9,9,3,4,3,3,3,3,3,3,3,3,3,3,9,3,3,3,3,3,3,3,3,3
+3,9,9,3,4,3,3,7,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+```

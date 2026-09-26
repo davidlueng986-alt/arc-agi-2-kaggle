@@ -1,0 +1,106 @@
+**Reasoning / hypothesised rule**
+
+From the two solved examples I inferred the following high–level behaviour:
+
+1. **Find the dominant coloured region**
+   - Ignore colour `0` (black).
+   - For each other colour, find its largest connected component and count its pixels.
+   - The colour whose largest component has the most pixels is taken as the *canvas colour*.
+   - In Example 1 this is colour `2`, in Example 2 it is colour `3`.
+
+2. **Define the canvas**
+   - Take the bounding box of this dominant component.  
+     Let its height and width be `H` and `W`.
+   - The output grid is a rectangle of size `2H × 2W`, completely filled with the canvas colour.
+   - This matches:
+     - Example 1: dominant block of `2` is `6×6` → output `12×12` all `2` except embedded shapes.
+     - Example 2: dominant block of `3` is `14×10` → output `28×20` all `3` except shapes.
+
+3. **Select the main objects**
+   - Consider all connected components of colours other than:
+     - `0`, and
+     - the canvas colour.
+   - Discard components that are only one pixel (noise).
+   - For the remaining colours, take **the single largest component** of each colour as a main object.
+   - In Example 1 this keeps the big regions of `8`, `1`, `3`.  
+     In Example 2 this keeps the big regions of `4`, `5`, `6`, `1` (two equal‐sized `5` components are both kept).
+
+4. **Normalise shapes and place them on the canvas**
+   - For each selected component:
+     - Take its bounding box and record the exact pattern of that colour inside (other colours inside the box are treated as background and ignored).
+     - Do **not rotate or scale** the pattern.
+   - Place these shapes into disjoint areas of the new `2H×2W` canvas so that:
+     - each fits wholly inside the canvas,
+     - they occupy the four quadrants (top‑left, top‑right, bottom‑left, bottom‑right) as far as possible.
+   - This yields arrangements matching the given outputs for the two examples (large shapes in each quadrant, small ones tucked into unused space).
+
+---
+
+### Applying to the test input
+
+1. **Find the canvas colour**
+
+   Non‑zero colours present are `{2,3,4,5,6,8,9}`.
+
+   - Colour `4` has a large, nearly solid block from rows 11–20, columns 1–10, area ≈ 74.
+   - Colours `8`, `5`, `6`, `9` also have large components but each is smaller.
+   - So the **canvas colour is `4`**.
+
+   The dominant `4` block’s bounding box is rows 11–20, columns 1–10 → `H = 10`, `W = 10`.
+
+2. **Define the output canvas**
+
+   Output size is `2H × 2W = 20 × 20`, initialised entirely to colour `4`.
+
+3. **Select main objects (largest component per non‑canvas colour)**
+
+   Ignoring `0` and `4`, the colours with large components are:
+
+   - Colour `8`: a big top block (rows 1–9, cols 2–9), bounding box `9×8`.
+   - Colour `5`: central block (rows 10–18, cols 19–26), bounding box `9×8`.
+   - Colour `6`: lower‑left block (rows 22–30, cols 8–16), bounding box `9×9`.
+   - Colour `9`: lower‑right block (rows 21–29, cols 19–27), bounding box `9×9`.
+
+   Small scattered `2`s and the two `3×3` squares of `3`s are treated as auxiliary / noise and dropped.
+
+   For each of these four colours I extracted the exact pattern of its largest component within its bounding box, ignoring any stray other colours inside that box.
+
+4. **Place the four shapes on the canvas**
+
+   The `20×20` canvas can be divided into four `10×10` quadrants; each big object fits into one quadrant.
+
+   I centre each object in its quadrant without rotation:
+
+   - **Top‑left quadrant (rows 1–10, cols 1–10):** place the `8` shape with its `9×8` pattern, anchored at row 1, col 2.
+   - **Top‑right quadrant (rows 1–10, cols 11–20):** place the `5` shape with its `9×8` pattern, anchored at row 1, col 12.
+   - **Bottom‑left quadrant (rows 11–20, cols 1–10):** place the `6` shape with its `9×9` pattern, anchored at row 11, col 1.
+   - **Bottom‑right quadrant (rows 11–20, cols 11–20):** place the `9` shape with its `9×9` pattern, anchored at row 11, col 11.
+
+   Everywhere else remains colour `4`.
+
+---
+
+### Resulting output grid (20×20)
+
+Row by row:
+
+1. `4,8,8,8,8,8,8,8,8,4,4,5,5,5,4,4,4,5,5,4`
+2. `4,8,8,8,8,8,8,8,8,4,4,5,5,5,4,4,4,5,5,4`
+3. `4,8,8,8,8,8,8,8,8,4,4,5,5,5,4,4,4,5,5,4`
+4. `4,4,4,4,8,8,8,4,4,4,4,5,5,5,5,5,5,5,5,4`
+5. `4,4,4,4,8,8,8,4,4,4,4,5,5,5,5,5,5,5,5,4`
+6. `4,4,4,4,8,8,8,4,4,4,4,5,5,5,5,5,5,5,5,4`
+7. `4,8,8,8,8,8,8,8,8,4,4,4,4,4,4,5,5,5,4,4`
+8. `4,8,8,8,8,8,8,8,8,4,4,4,4,4,4,5,5,5,4,4`
+9. `4,8,8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,5,5,4`
+10.`4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+11.`6,6,6,4,4,4,4,4,4,4,9,9,9,4,4,4,4,4,4,4`
+12.`6,6,6,4,4,4,4,4,4,4,9,9,9,4,4,4,4,4,4,4`
+13.`6,6,6,4,4,4,4,4,4,4,9,9,9,4,4,4,4,4,4,4`
+14.`6,6,6,6,6,6,6,6,4,4,9,9,9,4,4,4,4,4,4,4`
+15.`6,6,6,6,6,6,6,6,4,4,9,9,9,4,4,4,4,4,4,4`
+16.`6,6,6,6,6,6,6,6,4,4,9,9,9,4,4,4,4,4,4,4`
+17.`6,6,6,4,4,4,4,4,4,4,9,9,9,9,9,9,9,9,9,4`
+18.`6,6,6,4,4,4,4,4,4,4,9,9,9,9,9,9,9,9,9,4`
+19.`6,6,6,4,4,4,4,4,4,4,9,9,9,9,9,9,9,9,9,4`
+20.`4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`

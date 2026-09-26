@@ -1,0 +1,54 @@
+Looking at the examples, I need to understand the transformation pattern:
+
+1. **Marker position**: In Example 1, the marker (4s) is at the bottom row. In Example 2, it's also at the bottom. In the test, the marker is at the top (row 0).
+
+2. **Stripe projection**: The marker defines a vertical stripe that extends through the entire grid.
+
+3. **Transformation rules**:
+   - The stripe appears as 4s where it passes through shapes
+   - At "special" rows, shapes convert to 3s and the stripe shows 3s
+   - Special rows are: (a) the row above where a shape first enters the stripe, and (b) the widest row of shapes crossing the stripe
+   - For shapes that don't intersect the stripe, their first row becomes 3s
+
+For the test input:
+- Marker is at row 0, cols 7-14 (8-cell stripe)
+- Background is 8, shapes are 6s
+- I need to identify where shapes intersect the stripe and mark special rows
+
+Key observations:
+- Row 2: Above first shape entry (row 3) → 3s in stripe
+- Row 5: First row where right-side shape enters stripe → 3s
+- Row 10: Widest row of main left shape → 3s
+- Row 13: First row of new right shape entering stripe → 3s
+- Row 15: First row of new bottom-left shape → 3s
+- Row 21: Widest row of bottom shape cluster → 3s
+
+At non-special rows where stripe crosses shapes: show 4s in stripe portion.
+
+```
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,6,6,6,6,4,4,4,4,8,8,8,8,6,6,6,6,6,8,8,8,8,8
+8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8
+8,8,8,8,8,6,6,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,4,4,4,6,6,8,6,6,6,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,4,4,4,4,4,6,6,6,8,8,8,8,8,8,8
+8,8,8,8,8,6,8,4,4,4,4,4,4,4,4,6,6,6,8,8,8,8,8,8,8
+8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,4,4,4,4,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6,8,8
+8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,3,3,8,8,8
+8,8,8,6,6,6,6,4,4,4,4,4,8,8,8,8,8,8,6,6,6,6,8,8,8
+8,8,6,6,6,6,6,4,4,4,8,8,8,8,8,8,8,6,6,6,6,6,6,6,6
+8,8,8,8,6,6,6,4,4,4,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6
+8,8,8,8,8,6,6,8,8,8,4,4,4,4,4,6,6,8,8,6,6,6,6,6,8
+8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,6,6,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,4,4,4,4,4,4,4,6,6,8,8,8,8,8,8,8,8
+```

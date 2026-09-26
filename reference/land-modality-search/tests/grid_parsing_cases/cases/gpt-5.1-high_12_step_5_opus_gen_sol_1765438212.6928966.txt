@@ -1,0 +1,205 @@
+**Reasoning**
+
+1. **Find the template rectangle**
+
+   Looking at the test input, the only large, axis‑aligned rectangle made of one non‑zero color with 0‑holes inside and no other colors mixed in is:
+
+   - Rows 11–20
+   - Columns 1–10  
+   - Color = 4, with scattered 0s inside
+
+   This matches how in Example 1 (color 2) and Example 2 (color 3) the template is a solid block with internal 0‑holes and no other colors.
+
+   So the **template** is a 10×10 block of color 4 with 0‑holes.
+
+2. **Extract the 10×10 template hole pattern**
+
+   Re‑indexing the template rows as 1–10 and columns as 1–10, we get:
+
+   ```
+   r1: 4 4 4 4 4 4 4 4 4 4
+   r2: 4 0 4 0 4 4 0 4 0 4
+   r3: 4 0 0 0 4 4 0 0 0 4
+   r4: 4 0 4 0 4 4 4 4 0 4
+   r5: 4 4 4 4 4 0 4 4 4 4
+   r6: 4 4 4 4 4 4 4 4 4 4
+   r7: 4 0 0 0 4 0 0 0 4 4
+   r8: 4 4 0 4 4 0 4 4 4 4
+   r9: 4 4 0 4 4 0 4 4 0 4
+   r10:4 4 4 4 4 4 4 4 4 4
+   ```
+
+   Hole cells (value 0) are at:
+
+   - Row 2: c2,4,7,9  
+   - Row 3: c2,3,4,7,8,9  
+   - Row 4: c2,4,9  
+   - Row 5: c6  
+   - Row 7: c2,3,4,6,7,8  
+   - Row 8: c3,6  
+   - Row 9: c3,6,9  
+
+3. **Group the 0‑cells into connected components (4‑neighbourhood)**
+
+   Doing a BFS/DFS over 4‑neighbours inside this 10×10:
+
+   - **Component A** (size 7):  
+     (2,2), (3,2), (3,3), (3,4), (2,4), (4,2), (4,4)  
+     Shape: a fat “H”/ring (3×3 minus two middle‑column cells).
+
+   - **Component B** (size 6):  
+     (2,7), (3,7), (3,8), (3,9), (2,9), (4,9)  
+     Shape: a hooked/L‑ish block in the top‑right of the template interior.
+
+   - **Component C** (size 1):  
+     (5,6) – a single 0.
+
+   - **Component D** (size 5):  
+     (7,2), (7,3), (7,4), (8,3), (9,3)  
+     Shape: a vertical T (three across, then a vertical stem).
+
+   - **Component E** (size 5):  
+     (7,6), (7,7), (7,8), (8,6), (9,6)  
+     Another T/Γ shape on the right side of the lower half.
+
+   - **Component F** (size 1):  
+     (9,9) – a single 0.
+
+   So there are 6 hole components with sizes: 7, 6, 5, 5, 1, 1.
+
+4. **Identify the non‑template shapes outside this rectangle**
+
+   Template color is 4; markers are singletons of colors 2 and 8 (per description). We look for larger connected components (4‑neighbourhood) in colors other than 0 and 4:
+
+   - **Color 8**: A large block in the top‑left (rows 1–9, cols 2–10 and 5–7 etc.), all connected.  
+     → one shape S8, area = 63.
+
+   - **Color 5**: The big 5‑region around columns 19–27, rows 10–18:
+     - Rows 10–12: 6 cells each
+     - Rows 13–15: 9 cells each
+     - Rows 16–18: 3 cells each  
+     Total area = 54.  
+     → one shape S5, area 54.
+
+   - **Color 6**: The 6‑block in bottom middle/right (rows 22–30, cols 8–16), all connected.  
+     → one shape S6, area = 45.
+
+   - **Color 9**: The 9‑block in the lower right (rows 21–29, cols 19–27), all connected.  
+     → one shape S9, area = 45.
+
+   - **Color 3**: Two disjoint 3×3 solid squares:
+     - S3A at rows 8–10, cols 14–16 → area 9.
+     - S3B at rows 22–24, cols 2–4 → area 9.
+
+   All other 2’s are isolated 1‑ or 2‑cell markers and are ignored for matching.
+
+   So we have 6 shape components: S8, S5, S6, S9, S3A, S3B with areas:
+   - 63, 54, 45, 45, 9, 9.
+
+5. **Match shapes to hole components (by size, as in the examples)**
+
+   From the provided examples and checking them in detail:
+
+   - Holes are sorted by **size descending**, with ties broken by **earlier appearance in row‑major order**.
+   - Shapes are sorted by **area descending**, with ties broken by **later appearance** (larger row index first), as inferred from Example 2.
+   - Then we pair shape[i] with hole[i].
+
+   For the test:
+
+   - Holes sorted:
+
+     - Size 7: A  
+     - Size 6: B  
+     - Size 5: D, then E (D appears before E when scanning)  
+     - Size 1: C, then F  
+
+     → Hole sequence: [A, B, D, E, C, F]
+
+   - Shapes sorted by area, with ties broken by later top‑left row:
+
+     Areas and rough top‑left coordinates:
+     - S8: 63, top‑left (1,2)
+     - S5: 54, top‑left (10,19)
+     - S6: 45, top‑left (22,8)
+     - S9: 45, top‑left (21,19)
+     - S3A: 9,  top‑left (8,14)
+     - S3B: 9,  top‑left (22,2)
+
+     For ties (45 and 9), choose the **lower** (later) row first:
+
+     - 45: S6 (row 22) before S9 (row 21)
+     - 9:  S3B (row 22) before S3A (row 8)
+
+     → Shape sequence: [S8, S5, S6, S9, S3B, S3A]
+
+   Pairing:
+
+   - A (size7)  ← S8  → color 8
+   - B (size6)  ← S5  → color 5
+   - D (size5)  ← S6  → color 6
+   - E (size5)  ← S9  → color 9
+   - C (size1)  ← S3B → color 3
+   - F (size1)  ← S3A → color 3
+
+   Note both single‑cell hole components become color 3 (since both shapes are 3‑blocks).
+
+6. **Form the colored 10×10 template**
+
+   Replace each 0 in the template with its matched color:
+
+   - A → 8 at: (2,2), (2,4), (3,2), (3,3), (3,4), (4,2), (4,4)
+   - B → 5 at: (2,7), (3,7), (3,8), (3,9), (2,9), (4,9)
+   - C → 3 at: (5,6)
+   - D → 6 at: (7,2), (7,3), (7,4), (8,3), (9,3)
+   - E → 9 at: (7,6), (7,7), (7,8), (8,6), (9,6)
+   - F → 3 at: (9,9)
+
+   Resulting 10×10 color grid \(C[r,c]\):
+
+   ```
+   r1: 4 4 4 4 4 4 4 4 4 4
+   r2: 4 8 4 8 4 4 5 4 5 4
+   r3: 4 8 8 8 4 4 5 5 5 4
+   r4: 4 8 4 8 4 4 4 4 5 4
+   r5: 4 4 4 4 4 3 4 4 4 4
+   r6: 4 4 4 4 4 4 4 4 4 4
+   r7: 4 6 6 6 4 9 9 9 4 4
+   r8: 4 4 6 4 4 9 4 4 4 4
+   r9: 4 4 6 4 4 9 4 4 3 4
+   r10:4 4 4 4 4 4 4 4 4 4
+   ```
+
+7. **Scale up to the output**
+
+   The rule is: **each template cell becomes a 2×2 block** in the output. The output size is therefore 20×20 (2×10 by 2×10). The template color (4) is also the background elsewhere.
+
+   For each \(C[r,c]\), fill output cells \((2r-1,2c-1)\) to \((2r,2c)\) with that color.
+
+   Doing that yields the following 20×20 output.
+
+---
+
+## Final output grid
+
+Row 1–20, each with 20 entries:
+
+1. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+2. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+3. `4,4,8,8,4,4,8,8,4,4,4,4,5,5,4,4,5,5,4,4`
+4. `4,4,8,8,4,4,8,8,4,4,4,4,5,5,4,4,5,5,4,4`
+5. `4,4,8,8,8,8,8,8,4,4,4,4,5,5,5,5,5,5,4,4`
+6. `4,4,8,8,8,8,8,8,4,4,4,4,5,5,5,5,5,5,4,4`
+7. `4,4,8,8,4,4,8,8,4,4,4,4,4,4,4,4,5,5,4,4`
+8. `4,4,8,8,4,4,8,8,4,4,4,4,4,4,4,4,5,5,4,4`
+9. `4,4,4,4,4,4,4,4,4,4,3,3,4,4,4,4,4,4,4,4`
+10. `4,4,4,4,4,4,4,4,4,4,3,3,4,4,4,4,4,4,4,4`
+11. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+12. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+13. `4,4,6,6,6,6,6,6,4,4,9,9,9,9,9,9,4,4,4,4`
+14. `4,4,6,6,6,6,6,6,4,4,9,9,9,9,9,9,4,4,4,4`
+15. `4,4,4,4,6,6,4,4,4,4,9,9,4,4,4,4,4,4,4,4`
+16. `4,4,4,4,6,6,4,4,4,4,9,9,4,4,4,4,4,4,4,4`
+17. `4,4,4,4,6,6,4,4,4,4,9,9,4,4,4,4,3,3,4,4`
+18. `4,4,4,4,6,6,4,4,4,4,9,9,4,4,4,4,3,3,4,4`
+19. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+20. `4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`

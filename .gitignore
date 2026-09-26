@@ -6,3 +6,6 @@ src/__pycache__/
 *.pyc
 *.zip
 .cache/
+
+# vendored reference repos: exclude their bundled competition data
+reference/poetiq-solver/data/

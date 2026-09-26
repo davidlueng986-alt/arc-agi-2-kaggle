@@ -1,0 +1,43 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+1. **Identifying the 5 markers**: The 5s form two L-shaped markers that define the output dimensions through their bounding box.
+
+2. **Finding output dimensions**: 
+   - Example 1: 5s span rows 26-28 (3 rows) × cols 19-24 (6 cols) → output is 3×6
+   - Example 2: 5s span rows 14-27 (14 rows) × cols 19-20 (2 cols) → output is 14×2
+   - Example 3: 5s span rows 1-17 (17 rows) × cols 25-27 (3 cols) → output is 17×3
+
+3. **Base unit extraction and extension**: The transformation extracts a base pattern unit and extends/repeats it to fill the output dimensions.
+
+**Analyzing the test input:**
+
+- First 5 marker: rows 15-16, cols 6-7 (forming L-shape)
+- Second 5 marker: rows 21-22, cols 21-22 (forming inverse L-shape)
+- **Output dimensions**: rows 15-22 (8 rows) × cols 6-22 (17 cols) → **8 rows × 17 columns**
+
+**Identifying the base pattern:**
+Looking at the pattern structure, the main shapes are nested rectangles using colors 3 and 2. The topmost/innermost pattern at rows 0-1 uses color 3:
+```
+3,3,3,3,3
+3,0,0,0,3
+```
+
+This is a 2-row × 5-column frame pattern with 3s on the edges.
+
+**Extending the pattern:**
+- **Vertical**: Repeat the 2-row pattern 4 times to get 8 rows
+- **Horizontal**: Extend from 5 cols to 17 cols, maintaining the frame structure (3 on both edges, 0s in between)
+
+Row 1: All 3s → 17 3s
+Row 2: 3 at edges, 0s in middle → 3,0...0,3
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+```

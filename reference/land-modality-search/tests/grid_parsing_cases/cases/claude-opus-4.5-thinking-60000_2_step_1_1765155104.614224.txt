@@ -1,0 +1,48 @@
+Looking at the examples, I need to understand the transformation pattern:
+
+1. A row with 4s (marker) defines a vertical stripe through the grid
+2. The stripe extends from the marker to the opposite end of the grid
+3. The row opposite to the marker gets 3s at stripe positions
+4. For blobs (connected regions of 6s/8s/2s):
+   - The widest row of each blob that intersects the stripe gets converted to 3s across its full extent
+   - The first and last rows of a blob's stripe intersection get 4s at stripe positions
+   - Interior rows get background at stripe positions (cutting through the blob)
+5. Rows with colored pixels only within the stripe (no extension outside) become background
+
+For the test input:
+- Marker is at row 0, cols 7-14
+- Row 24 (opposite end) gets 3s at stripe positions
+- Large blob spans rows 3-11: widest row is row 5 (15 cells) → gets 3s
+- Small blob at rows 13-14: row 13 intersects stripe and gets 3s
+- Large blob spans rows 15-24: widest row is row 17 (16 cells) → gets 3s
+- Row 3 has 6s only within stripe → becomes background
+- Rows 4, 11, 14, 15, 19 are boundary rows → get 4s at stripe
+- Interior rows get background at stripe positions
+
+```
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,6,6,6,6,4,4,4,4,4,4,4,4,6,6,6,6,6,8,8,8,8,8
+8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8
+8,8,8,8,8,6,6,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,8,6,6,6,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,6,6,6,8,8,8,8,8,8,8
+8,8,8,8,8,6,8,8,8,8,8,8,8,8,8,6,6,6,8,8,8,8,8,8,8
+8,8,8,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,4,4,4,4,4,4,4,4,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,8
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,6,6,6,6,6,6,6,6,8,8
+8,8,8,8,6,6,6,4,4,4,4,4,4,4,4,8,8,8,8,8,6,6,8,8,8
+8,8,8,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,8,8,8
+8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,3,3,3,3,3,3,3,3
+8,8,8,8,6,6,6,8,8,8,8,8,8,8,8,8,8,8,6,6,6,6,6,6,6
+8,8,8,8,8,8,8,4,4,4,4,4,4,4,4,8,8,8,8,6,6,6,6,6,6
+8,8,8,8,8,6,6,8,8,8,8,8,8,8,8,6,6,8,8,6,6,6,6,6,8
+8,8,6,6,6,6,6,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,8,8,8,8,8,8,8,8,6,6,8,8,8,8,8,8,8,8
+8,8,8,8,8,6,6,8,8,8,8,8,8,8,8,6,6,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,3,3,3,3,3,3,3,3,6,6,8,8,8,8,8,8,8,8
+```

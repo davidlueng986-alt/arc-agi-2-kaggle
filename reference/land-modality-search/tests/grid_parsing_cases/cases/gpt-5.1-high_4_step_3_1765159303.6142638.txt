@@ -1,0 +1,169 @@
+**Reasoning**
+
+1. **What’s happening in the examples**
+
+   Looking at all four solved examples:
+
+   - Color `8` is background.
+   - Colors `1` and `2` always appear together in “bars” (horizontal or vertical). In the outputs:
+     - Every `1` is turned into `2`.
+     - The pattern of `2` is preserved (and sometimes extended slightly).
+   - There is exactly one `3` in each input.
+   - In the outputs, a *connected path* of `3`s is drawn, starting from that original `3` and reaching the opposite side of the grid:
+     - If the original `3` is on the **top** edge, the path goes to the **bottom** edge.
+     - If the original `3` is on the **left** edge, the path goes to the **right** edge.
+   - The path of `3`s never touches a `2` orthogonally; it always stays at least one cell away (no 4‑connected adjacency between `3` and `2`).
+
+   This can be phrased as:
+
+   > 1. Turn all `1`s into `2`s.
+   > 2. Treat all `2` cells as “obstacles”, and also avoid their immediate 4‑neighbors.
+   > 3. In the remaining background (`8`) area, draw a 4‑connected path of `3`s from the existing `3` to the opposite border of the grid, ensuring the path never steps onto an obstacle or one of its immediate neighbors.
+
+   The specific shapes in the training examples are consistent with a shortest such path (in Manhattan steps) that respects the “stay at least one cell away from any `2`” constraint.
+
+2. **Apply step 1 to the test grid (1→2)**
+
+   Original test input has `1`s at:
+
+   - (row 0, col 1), (0,17)
+   - (2,17)
+   - (4,17)
+   - (11,7)
+   - (13,7)
+
+   All are converted to `2`. So after this, the non‑background structure is:
+
+   - A left vertical bar of `2`s at column 1, rows 0–5.
+   - A middle vertical bar of `2`s at column 7, rows 5–13.
+   - A right vertical bar of `2`s at column 17, rows 0–9.
+   - A single `3` at (6,25) (right edge).
+
+   The grid after 1→2 is:
+
+   ```
+   r0:  8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r1:  8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r2:  8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r3:  8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r4:  8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r5:  8,2,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r6:  8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,3
+   r7:  8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r8:  8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r9:  8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+   r10: 8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+   r11: 8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+   r12: 8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+   r13: 8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+   ```
+
+3. **Define the forbidden zone around 2s**
+
+   For each `2` at `(r,c)`, we mark it and its 4‑neighbors `(r±1,c)` and `(r,c±1)` as forbidden for the `3` path. This builds three vertical “forbidden strips” around the three bars of `2`:
+
+   - Left strip roughly columns 0–2 for rows 0–5 (plus one extra cell at (6,1)).
+   - Middle strip columns 6–8 from row 5 to 13 (plus (4,7)).
+   - Right strip columns 16–18 from row 0 to 9 (plus (10,17)).
+
+   The `3` we’re going to draw must stay out of these forbidden strips.
+
+4. **Path construction idea**
+
+   - The existing `3` is at (6,25), on the **right** edge.
+   - By analogy with the examples, the path should go from this right edge to the **left** edge, while staying in allowed cells (background `8`), avoiding the forbidden region.
+   - Geometrically:
+     - To get past the right strip (around column ~17), the path must go **below** its end (i.e. to rows ≥11).
+     - Then it can move left into the central corridor (columns 9–15).
+     - To get past the middle strip (columns 6–8), the path must go **above** it (rows ≤4) and cross over.
+     - Finally, in the left corridor (columns 0–5) it can go down to some row ≥7 (where the left strip no longer blocks column 0) and reach the left border.
+
+   A shortest such path that satisfies all this (and does not step next to any `2`) is:
+
+   - Start at (6,25) [existing `3`].
+   - Go **down** to row 11, keeping col 25:  
+     (7,25), (8,25), (9,25), (10,25), (11,25).
+   - Go **left** along row 11 into the central corridor:  
+     (11,24), (11,23), (11,22), (11,21), (11,20), (11,19), (11,18),
+     (11,17), (11,16), (11,15), (11,14), (11,13), (11,12), (11,11),
+     (11,10), (11,9).
+   - Go **up** in column 9 to get above the middle strip:  
+     (10,9), (9,9), (8,9), (7,9), (6,9), (5,9), (4,9), (3,9).
+   - Go **left** across row 3 (above the middle strip) into the left side:  
+     (3,8), (3,7), (3,6), (3,5).
+   - Go **down** in column 5 until below the left strip’s vertical extent:  
+     (4,5), (5,5), (6,5), (7,5).
+   - Finally go **left** in row 7 to the left border:  
+     (7,4), (7,3), (7,2), (7,1), (7,0).
+
+   This path:
+   - Is 4‑connected from the starting `3` to the left edge.
+   - Never steps onto a `2`.
+   - Never steps orthogonally adjacent to any `2` (it always stays at least one cell away).
+   - Matches the style of the 3‑paths in the training examples: one continuous “corridor” around the colored bars.
+
+5. **Overlay the 3‑path on the grid**
+
+   We now overwrite those coordinates with `3`. None of them coincide with `2`s, so no conflicts.
+
+   The cells receiving `3` are:
+
+   - r3: c5,6,7,8,9
+   - r4: c5,9
+   - r5: c5,9
+   - r6: c5,9,25 (25 already `3`)
+   - r7: c0,1,2,3,4,5,9,25
+   - r8: c9,25
+   - r9: c9,25
+   - r10: c9,25
+   - r11: c9–25 (inclusive)
+
+   All other `8`s remain `8`, and all `2`s remain `2`.
+
+---
+
+## Final output grid
+
+Here is the completed output grid (rows 0–13):
+
+Row 0:
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 1:
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 2:
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 3:
+8,2,8,8,8,3,3,3,3,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 4:
+8,2,8,8,8,3,8,8,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 5:
+8,2,8,8,8,3,8,2,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+
+Row 6:
+8,8,8,8,8,3,8,2,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,3
+
+Row 7:
+3,3,3,3,3,3,8,2,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,3
+
+Row 8:
+8,8,8,8,8,8,8,2,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,3
+
+Row 9:
+8,8,8,8,8,8,8,2,8,3,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,3
+
+Row 10:
+8,8,8,8,8,8,8,2,8,3,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,3
+
+Row 11:
+8,8,8,8,8,8,8,2,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+
+Row 12:
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+
+Row 13:
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8

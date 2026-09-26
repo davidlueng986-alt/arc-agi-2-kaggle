@@ -1,0 +1,195 @@
+First I’ll explain the pattern from the examples, then apply it to the test grid and show the final output.
+
+---
+
+## 1. Inferring the transformation from the examples
+
+Across all three solved examples, the steps are:
+
+1. **Find a central “picture” region**  
+   - This region is a rectangular block dominated by one **main non‑zero color**, with some additional colors decorating it.
+   - Other colors (often different, and often forming the frame of the big grid: 3,5,1,2,4 etc.) are *not* part of the picture and serve as border/noise.
+
+2. **Crop to the minimal bounding rectangle containing all pixels of the main picture color**  
+   - Example 2: main color is 2. The central 10×10 block of 2’s (with some 4’s and 8’s inside) is cropped.
+   - Example 3: main color is 8. The 5×5 block of 8’s (with 3,6,9 inside) is cropped.
+   - Example 1: main color is 1. A 15×11 rectangle around the 1-region is cropped.
+   - In all cases, if you take that minimal rectangle around the main color, it *also* contains all the inner detail colors (4,8,3,6,9,2…).
+
+3. **Rotate that cropped rectangle 90° counterclockwise (CCW)**  
+   - Check on Example 3: the 5×5 crop \(B\) becomes the 5×5 output by a 90° CCW rotation. Doing the explicit matrix rotation matches exactly.
+   - Check on Example 2: the 10×10 crop \(C\) becomes the 10×10 output by a 90° CCW rotation. Again the mapping \(R(i,j) = C(j, 11-i)\) reproduces the given result.
+
+So the rule is:
+
+> Find the minimal rectangle that contains all cells of the main interior color, crop that rectangle, then rotate it 90 degrees counterclockwise.
+
+---
+
+## 2. Applying the rule to the test input
+
+### 2.1. Identify the main picture region and color
+
+Looking at the test input:
+
+- Colors present: 0,2,3,4,5,6,7,8,9.
+- The large central block (rows 5–16, columns roughly 5–24) is dominated by **color 4**:
+  - Rows 5–16 have a dense area of 4’s, forming a big rectangular area.
+  - Inside that area there are also 6’s, 7’s, 8’s, and 9’s.
+- Colors 2,3,5 form borders or sparse noise:
+  - Row 1 is almost all 2’s.
+  - Column 4 has a vertical strip of 2’s.
+  - Several rows near the bottom use many 3’s.
+  - 5 occurs mostly along the left and bottom, not forming the central rectangular region.
+- Outside that big 4-region, there are **no** 4’s: all 4’s are confined to rows 5–16 and columns 5–24.
+
+This matches the pattern from the examples: 4 is the main interior color.
+
+### 2.2. Crop the minimal bounding rectangle containing all 4’s
+
+All 4’s are within:
+
+- Rows: **5 through 16**
+- Columns: **5 through 24**
+
+So the cropped block \(B\) is 12 rows × 20 columns.
+
+Let’s list this 12×20 crop \(B\) (row indices 1–12 correspond to original rows 5–16):
+
+Row 1 (original row 5, cols 5–24):  
+`4,7,0,0,0,0,0,4,4,6,4,4,4,4,4,4,0,0,0,4`
+
+Row 2 (row 6):  
+`4,7,4,0,0,0,4,4,4,6,4,6,6,6,6,6,4,7,4,4`
+
+Row 3 (row 7):  
+`4,7,4,4,4,4,4,4,4,6,4,6,4,4,4,6,4,7,4,0`
+
+Row 4 (row 8):  
+`4,7,4,4,4,4,4,4,4,6,4,4,4,4,4,6,4,7,4,0`
+
+Row 5 (row 9):  
+`4,7,4,6,4,6,6,6,6,6,4,4,4,4,4,6,4,7,4,4`
+
+Row 6 (row 10):  
+`4,7,4,6,6,4,4,4,4,4,4,4,4,4,6,6,4,7,4,4`
+
+Row 7 (row 11):  
+`4,7,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,7,4,0`
+
+Row 8 (row 12):  
+`4,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,4,4`
+
+Row 9 (row 13):  
+`4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+
+Row 10 (row 14):  
+`4,8,8,9,4,9,4,9,4,9,4,9,4,9,4,9,4,9,4,4`
+
+Row 11 (row 15):  
+`4,8,8,9,4,9,4,9,4,9,4,9,4,9,4,9,4,9,4,4`
+
+Row 12 (row 16):  
+`4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4`
+
+Dimensions: 12 rows × 20 columns, as expected.
+
+### 2.3. Rotate this crop 90° counterclockwise
+
+For a matrix \(B\) with 12 rows and 20 columns:
+
+- After a 90° CCW rotation, the new matrix \(R\) has:
+  - **20 rows** (one for each original column),
+  - **12 columns** (one for each original row).
+- Coordinate mapping:  
+  \(R(i,j) = B(j, 20 + 1 - i) = B(j, 21 - i)\)  
+  i.e. new row \(i\) is original column \(21 - i\), read from top to bottom.
+
+Computing this gives the 20×12 output matrix:
+
+Row 1 = original column 20:  
+`4,4,0,0,4,4,0,4,4,4,4,4`
+
+Row 2 = original column 19:  
+`0,4,4,4,4,4,4,4,4,4,4,4`
+
+Row 3 = original column 18:  
+`0,7,7,7,7,7,7,7,4,9,9,4`
+
+Row 4 = original column 17:  
+`0,4,4,4,4,4,4,7,4,4,4,4`
+
+Row 5 = original column 16:  
+`4,6,6,6,6,6,4,7,4,9,9,4`
+
+Row 6 = original column 15:  
+`4,6,4,4,4,6,4,7,4,4,4,4`
+
+Row 7 = original column 14:  
+`4,6,4,4,4,4,4,7,4,9,9,4`
+
+Row 8 = original column 13:  
+`4,6,4,4,4,4,4,7,4,4,4,4`
+
+Row 9 = original column 12:  
+`4,6,6,4,4,4,4,7,4,9,9,4`
+
+Row 10 = original column 11:  
+`4,4,4,4,4,4,4,7,4,4,4,4`
+
+Row 11 = original column 10:  
+`6,6,6,6,6,4,4,7,4,9,9,4`
+
+Row 12 = original column 9:  
+`4,4,4,4,6,4,4,7,4,4,4,4`
+
+Row 13 = original column 8:  
+`4,4,4,4,6,4,4,7,4,9,9,4`
+
+Row 14 = original column 7:  
+`0,4,4,4,6,4,4,7,4,4,4,4`
+
+Row 15 = original column 6:  
+`0,0,4,4,6,4,4,7,4,9,9,4`
+
+Row 16 = original column 5:  
+`0,0,4,4,4,6,4,7,4,4,4,4`
+
+Row 17 = original column 4:  
+`0,0,4,4,6,6,4,7,4,9,9,4`
+
+Row 18 = original column 3:  
+`0,4,4,4,4,4,4,7,4,8,8,4`
+
+Row 19 = original column 2:  
+`7,7,7,7,7,7,7,7,4,8,8,4`
+
+Row 20 = original column 1:  
+`4,4,4,4,4,4,4,4,4,4,4,4`
+
+---
+
+## Final output grid
+
+Here is the completed output grid in the required comma-separated format:
+
+4,4,0,0,4,4,0,4,4,4,4,4  
+0,4,4,4,4,4,4,4,4,4,4,4  
+0,7,7,7,7,7,7,7,4,9,9,4  
+0,4,4,4,4,4,4,7,4,4,4,4  
+4,6,6,6,6,6,4,7,4,9,9,4  
+4,6,4,4,4,6,4,7,4,4,4,4  
+4,6,4,4,4,4,4,7,4,9,9,4  
+4,6,4,4,4,4,4,7,4,4,4,4  
+4,6,6,4,4,4,4,7,4,9,9,4  
+4,4,4,4,4,4,4,7,4,4,4,4  
+6,6,6,6,6,4,4,7,4,9,9,4  
+4,4,4,4,6,4,4,7,4,4,4,4  
+4,4,4,4,6,4,4,7,4,9,9,4  
+0,4,4,4,6,4,4,7,4,4,4,4  
+0,0,4,4,6,4,4,7,4,9,9,4  
+0,0,4,4,4,6,4,7,4,4,4,4  
+0,0,4,4,6,6,4,7,4,9,9,4  
+0,4,4,4,4,4,4,7,4,8,8,4  
+7,7,7,7,7,7,7,7,4,8,8,4  
+4,4,4,4,4,4,4,4,4,4,4,4

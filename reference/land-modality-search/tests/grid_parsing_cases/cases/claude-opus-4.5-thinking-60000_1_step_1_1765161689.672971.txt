@@ -1,0 +1,47 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+1. **Pattern Identification**: Each example contains cross/diamond-shaped patterns with a uniform "border" color (4 cardinal directions) and a different "center" color.
+
+2. **Chain Relationships**: Patterns form chains where one pattern's center value matches another pattern's border value (e.g., if pattern A has center=4 and pattern B has border=4, then A→B).
+
+3. **5s as Boundaries**: The 5s form a path/boundary that divides the grid, determining which patterns survive and which are removed.
+
+4. **Transformation Rule**:
+   - Patterns on one side of the 5-boundary survive
+   - Patterns on the other side are removed
+   - Surviving patterns that point to removed patterns get their center updated to the removed pattern's center value
+
+**Analyzing the test input:**
+
+Cross patterns found:
+- **A**: center (2,2), border=4, center=2
+- **B**: center (1,7), border=2, center=3  
+- **C**: center (6,4), border=1, center=9
+- **D**: center (7,1), border=7, center=1
+- **E**: center (6,8), border=3, center=3 (uniform, removed based on position)
+
+Chain relationships:
+- A (center 2) → B (border 2): A gets B's center (3)
+- D (center 1) → C (border 1): D gets C's center (9)
+
+The 5-boundary runs vertically through columns 6-7, then branches bottom-left. Patterns A and D are to the left (survive), while B, C, and E are to the right or enclosed (removed).
+
+**Applying transformation:**
+- Pattern A: Update center from 2 to 3
+- Pattern B: Remove (set cells to 0)
+- Pattern C: Remove (set cells to 0)
+- Pattern D: Update center from 1 to 9
+- Pattern E: Remove (set cells to 0)
+
+```
+0,0,0,0,0,0,0,0,0,0
+0,0,4,0,0,0,0,0,0,0
+0,4,3,4,0,0,0,0,0,0
+0,0,4,0,0,0,0,5,0,0
+0,0,0,0,0,0,5,0,0,0
+0,0,0,0,0,0,5,0,0,0
+0,7,0,0,0,0,5,0,0,0
+7,9,7,0,0,0,5,0,0,0
+0,7,0,5,0,5,0,0,0,0
+0,5,5,0,5,0,0,0,0,0
+```

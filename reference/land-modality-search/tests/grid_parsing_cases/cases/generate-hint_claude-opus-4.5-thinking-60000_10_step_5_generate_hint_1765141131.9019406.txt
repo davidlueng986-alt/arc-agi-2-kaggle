@@ -1,0 +1,37 @@
+Looking at this task, I need to understand the transformation pattern from the examples:
+
+**Analysis of Examples:**
+- In Example 1: The left portion (cols 0-6) serves as a template with 9s as background and 4s as markers. The right portion contains colored shapes on a 4 background. The output fills the marker positions with colors from corresponding positions in the data region.
+- In Example 2: The bottom portion (rows 11-19) is the template with 2s as background and 8s as markers. The top portion contains shapes on 8 background. Shapes fill the marker positions.
+
+**For the Test Input:**
+- **Template region**: Rows 0-9 (background = 3, markers = 1)
+- **Data region**: Rows 11-24 (background = 1, contains colored shapes)
+- **Output**: Same dimensions as template (10×25), with 3 as background
+
+**Mapping**: For each position (r, c):
+- If template[r][c] = 3 (background) → output = 3
+- If template[r][c] = 1 (marker) → output = data[r+11][c] if it's not 1, else 3
+
+Applying this row-by-row mapping, where template row 0 corresponds to data row 11, template row 1 to data row 12, etc.:
+
+The shapes that get mapped include:
+- 9,9 block (cols 1-2)
+- 6/8 checkerboard pattern (cols 7-11)
+- 4,4 blocks (cols 4-5 and 15-16)
+- 2/5 pattern (cols 19-21)
+- 7,7 block (cols 7-8)
+- 8,8 block (cols 22-23)
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,6,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,9,9,3,3,3,3,6,6,3,3,6,3,3,3,4,3,3,3,3,2,2,3,3,3
+3,9,9,3,3,3,3,6,8,3,3,6,3,3,3,4,4,3,3,2,5,2,3,3,3
+3,9,9,3,3,3,3,6,6,3,3,6,3,3,3,4,4,3,3,2,2,2,3,3,3
+3,9,9,3,3,3,3,6,6,6,6,6,3,3,3,4,3,3,3,3,3,3,3,3,3
+3,9,9,3,4,3,3,3,3,3,3,3,3,3,3,9,3,3,3,3,3,3,3,3,3
+3,9,9,3,4,3,3,7,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,8,8,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+```

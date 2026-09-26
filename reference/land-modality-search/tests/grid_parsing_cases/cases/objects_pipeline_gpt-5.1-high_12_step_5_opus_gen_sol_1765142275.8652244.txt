@@ -1,0 +1,47 @@
+Below is how I applied the described transformation to the test input, following the given “template + objects, horizontal flip, fill interior” specification.
+
+1. **Identify template vs. objects region**
+
+- The grid is 25×25.
+- The **top 10 rows** contain only colors 3 and 1. This matches the pattern “boundary (3) + fillable interior (1)”, so this is the **template region** (size 10×25).
+- The **bottom 15 rows** (rows 11–25) contain various colors on a uniform background of 1. This is the **objects region** (size 15×25), with background color 1.
+
+2. **Template parameters**
+
+- **Boundary color**: 3 (all frame-like and separating lines in the top region are 3s).
+- **Interior color**: 1 (fillable cells inside the boundary).
+
+3. **Objects region transformation**
+
+- Take the bottom 15×25 region as the objects grid.
+- **Horizontally flip** this objects grid:
+  - For each row `r` and column `c` in the objects grid (width 25), the flipped column index is `c' = 26 - c`.
+  - The flipped grid (call it ORf) is still 15×25.
+
+4. **Map flipped objects into template**
+
+- The **output grid has the same size as the template**: 10×25.
+- For each cell `(r, c)` in the **template** (with `r = 1..10`, `c = 1..25`):
+  - If the template cell is the boundary color (3), keep it as 3 in the output.
+  - If the template cell is interior (1), replace it with the color at `(r, c)` of the **horizontally flipped objects grid** ORf (using the first 10 rows of ORf).
+
+5. **Resulting output grid**
+
+Applying that rule row by row gives:
+
+Row 1: all boundary → unchanged  
+Row 10: all boundary → unchanged  
+Rows 2–9: interior 1s replaced by the corresponding colors from ORf.
+
+Final 10×25 output grid:
+
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3  
+3,3,3,2,2,3,3,1,4,3,3,3,3,6,3,3,3,3,3,3,3,3,9,9,3  
+1,1,1,2,5,2,1,1,4,3,3,1,1,6,8,6,3,3,1,3,1,1,9,9,3  
+1,1,1,2,2,2,1,1,4,3,3,1,1,6,6,8,6,6,1,1,1,1,9,9,3  
+1,1,1,2,5,3,3,1,4,3,3,1,1,6,8,6,8,6,1,1,1,1,9,9,3  
+1,1,1,2,2,3,3,1,4,4,1,1,1,6,6,8,3,3,1,3,3,3,9,9,1  
+1,1,1,2,5,3,1,1,4,4,1,1,1,6,6,6,3,3,3,3,3,3,9,9,1  
+1,1,1,2,2,3,3,1,9,3,3,1,1,1,1,1,3,3,3,3,3,3,9,9,1  
+1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,9,9,1  
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3

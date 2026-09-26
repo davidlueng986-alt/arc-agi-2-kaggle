@@ -1,0 +1,52 @@
+Looking at the examples, I need to identify the transformation pattern.
+
+**Analysis of Examples:**
+
+In both examples, colored shapes are rearranged based on their position relative to the grid's center:
+- Shapes in the **upper-left** or **lower-right** quadrants (along the main diagonal) move to the **bottom** of the output
+- Shapes in the **upper-right** or **lower-left** quadrants (along the anti-diagonal) move to the **top** of the output
+
+The shapes preserve their form and horizontal (column) positions, but:
+- Shapes going to TOP are anchored to row 0
+- Shapes going to BOTTOM are anchored to the last row
+
+**Applying to Test Input (25×25 grid, center at row 12, col 12):**
+
+Identifying shapes and their quadrants:
+1. **Color 2** (rows 2-4, cols 3-7): Upper-left → BOTTOM
+2. **Color 5** (rows 3-7, cols 19-23): Upper-right → TOP
+3. **Color 3 left** (rows 11-15, cols 4-8): Lower-left → TOP
+4. **Color 3 right** (rows 11-15, cols 18-20): Lower-right → BOTTOM
+5. **Color 4** (rows 19-21, cols 12-15): Lower-right → BOTTOM
+
+**Transformation:**
+- TOP (rows 0-4): Color 5 and Color 3 (left component)
+- BOTTOM (rows 20-24): Color 2, Color 3 (right component), Color 4
+
+```
+1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,1,1
+1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1
+1,1,1,1,1,3,1,3,1,1,1,1,1,1,1,1,1,1,1,1,5,1,5,1,1
+1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1
+1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,5,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1
+1,1,1,1,1,2,2,2,1,1,1,1,4,1,1,1,1,1,3,3,3,1,1,1,1
+1,1,1,1,1,2,1,1,1,1,1,1,4,4,4,4,1,1,1,1,3,1,1,1,1
+1,1,1,2,2,2,1,1,1,1,1,1,1,4,1,1,1,1,1,1,3,1,1,1,1
+```

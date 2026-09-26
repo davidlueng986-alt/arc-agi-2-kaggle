@@ -1,0 +1,28 @@
+Looking at the examples, I can identify the transformation pattern:
+
+**Example 1:** The grid has a template region (left, cols 0-6) with 9s as solid and 4s as holes, and a content region (right, cols 8-14) with colored objects. The output overlays the content onto the template's hole positions.
+
+**Example 2:** The grid has a template region (bottom, rows 11-19) with 2s as solid and 8s as holes, and a content region (top, rows 0-10). The transformation folds the content onto the template with horizontal reflection, filling holes with content values.
+
+**Test Input Analysis:**
+- Template region: Rows 0-9 (3 = solid, 1 = holes)
+- Content region: Rows 10-24 (1 = background, colored objects)
+- The content is folded onto the template (row mapping: template row T uses content row 19-T)
+- Content is horizontally reflected (col c → col 24-c)
+- Where template has 3 (solid), output is 3
+- Where template has 1 (hole), output is the transformed content value
+
+Applying this transformation:
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,1,1,3,3,1,1,3,3,3,3,1,3,3,3,3,3,3,3,3,9,9,3
+1,1,1,2,2,2,1,1,9,3,3,1,1,1,1,1,3,3,1,3,4,1,9,9,3
+1,1,1,2,5,2,1,1,4,3,3,1,1,6,6,6,6,6,1,1,1,1,9,9,3
+1,1,1,2,2,3,3,1,4,3,3,1,1,6,6,8,6,6,1,1,1,1,9,9,3
+1,1,1,2,5,3,3,1,4,4,1,1,1,6,8,6,3,3,1,3,3,3,9,9,1
+1,1,1,2,2,3,1,1,4,4,1,1,1,6,6,8,3,3,3,3,3,3,9,9,1
+1,1,1,2,5,3,3,1,4,3,3,1,1,6,8,6,3,3,3,3,3,3,9,9,1
+1,1,1,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,9,9,1
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+```

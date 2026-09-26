@@ -1,0 +1,32 @@
+### Reasoning
+
+From the two training pairs we can infer:
+
+- Each puzzle contains two very dominant “background” colors.  
+- In the outputs, one of these backgrounds disappears and the other becomes the uniform background of the new grid.
+- All other colors (the “objects”) keep their shapes; they are only translated, never resized or recolored.
+- The dimension along which objects are spread more is kept (same width or same height as the original); the smaller dimension is cropped to the minimal band that contains all the objects.
+- In the test case, colors `1` and `3` are the two most frequent.  
+  The objects (colors `0,2,4,5,6,7,8,9`) all lie inside the region of color `1`, while the large area of color `3` is separate.  
+  By analogy with the training examples, color `1` is the background that disappears, and color `3` becomes the new uniform background.
+
+So we:
+1. Take the minimal vertical band containing any non‑`1`/`3` color (rows 12–24 of the input).
+2. Replace every `1` there by `3` (removing the old background).
+3. Use exactly that band as the output (height 13, width 25), with all object cells preserved.
+
+### Output grid
+
+3,9,9,3,3,3,3,6,6,6,6,6,3,3,3,4,4,3,3,2,2,2,3,3,3  
+3,9,9,3,3,3,3,6,8,6,8,6,3,3,3,4,4,3,3,2,5,2,3,3,3  
+3,9,9,3,3,3,3,6,6,8,6,6,3,3,3,4,4,3,3,2,2,2,3,3,3  
+3,9,9,3,3,3,3,6,8,6,8,6,3,3,3,4,4,3,3,2,5,2,3,3,3  
+3,9,9,3,3,3,3,6,6,8,6,6,3,3,3,4,4,3,3,2,2,2,3,3,3  
+3,9,9,3,3,3,3,6,6,6,6,6,3,3,3,4,4,3,3,2,5,2,3,3,3  
+3,9,9,3,4,4,3,3,3,3,3,3,3,3,3,9,9,3,3,2,2,2,3,3,3  
+3,9,9,3,4,4,3,7,7,7,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3  
+3,3,3,3,4,4,3,7,7,7,7,3,3,3,3,3,3,3,3,3,3,3,8,8,3  
+3,3,3,3,4,4,3,3,3,3,3,3,3,3,5,5,3,3,3,6,3,3,8,8,3  
+3,8,8,3,4,4,3,0,3,0,3,3,3,3,5,5,3,3,3,6,3,3,3,3,3  
+3,8,8,3,4,4,3,3,3,3,3,3,3,3,5,5,3,3,3,6,3,3,3,3,3  
+3,3,3,3,9,9,3,0,3,0,3,3,3,3,3,3,3,3,3,6,3,3,3,3,3

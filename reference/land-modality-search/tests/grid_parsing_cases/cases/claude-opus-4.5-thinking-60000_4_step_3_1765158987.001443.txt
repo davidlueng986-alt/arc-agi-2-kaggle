@@ -1,0 +1,50 @@
+Looking at the examples, I need to identify the transformation pattern.
+
+**Analysis of Examples:**
+
+1. In each example, there's an inner rectangular region containing a pattern, bounded by colored borders:
+   - Example 1: Rectangle bounded by 6s (left/bottom), 4s (right/top), containing 1s as background
+   - Example 2: Rectangle bounded by 3s (left/bottom), 1s (right/bottom), containing 2s as background
+   - Example 3: Rectangle bounded by 4s (left/bottom), 2s (top), containing 8s as background
+
+2. The transformation is: **Extract the inner rectangle and rotate it 90° clockwise**
+
+3. For 90° clockwise rotation: each column of the original becomes a row in the output, read from bottom to top.
+
+**Applying to Test Input:**
+
+The inner rectangle is bounded by:
+- Left border: Column 3 has 2s (rows 4-15)
+- Bottom border: Row 16 has 3s (columns 4-23)
+
+So the inner rectangle spans rows 4-15 and columns 4-23 (12 rows × 20 columns).
+
+Extracting and rotating 90° clockwise:
+- The 20 columns become 20 rows
+- The 12 rows become 12 columns
+- Each column is read from bottom to top to form the new row
+
+After extracting the rectangle and performing the rotation (each original column j becomes output row j, reading values from row 11 down to row 0):
+
+```
+4,4,4,4,4,4,4,4,4,4,4,4
+4,8,8,4,7,7,7,7,7,7,7,7
+4,8,8,4,7,4,4,4,4,4,4,0
+4,9,9,4,7,4,6,6,4,4,0,0
+4,4,4,4,7,4,6,4,4,4,0,0
+4,9,9,4,7,4,4,6,4,4,0,0
+4,4,4,4,7,4,4,6,4,4,4,0
+4,9,9,4,7,4,4,6,4,4,4,4
+4,4,4,4,7,4,4,6,4,4,4,4
+4,9,9,4,7,4,4,6,6,6,6,6
+4,4,4,4,7,4,4,4,4,4,4,4
+4,9,9,4,7,4,4,4,4,6,6,4
+4,4,4,4,7,4,4,4,4,4,6,4
+4,9,9,4,7,4,4,4,4,4,6,4
+4,4,4,4,7,4,6,4,4,4,6,4
+4,9,9,4,7,4,6,6,6,6,6,4
+4,4,4,4,7,4,4,4,4,4,4,0
+4,9,9,4,7,7,7,7,7,7,7,0
+4,4,4,4,4,4,4,4,4,4,4,0
+4,4,4,4,4,0,4,4,0,0,4,4
+```

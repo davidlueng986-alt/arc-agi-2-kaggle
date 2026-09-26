@@ -1,0 +1,50 @@
+Looking at the examples, I need to understand the transformation pattern.
+
+**Analysis of Examples:**
+
+In each example, there's a "key" (a 2-row lookup table) and several shapes:
+
+1. **Example 1**: Key at top-right corner is `[3,4,6,9,5] / [3,6,7,2,9]`. Reading column by column: 3→3, 4→6, 6→7, 9→2, 5→9. The 4-shape gets filled with 6, the 3-shape gets filled with 3, but the 7-shape (not in key) stays unchanged.
+
+2. **Example 2**: Key at top-left is `[2,4,6,8] / [6,5,8,1]` (reading column by column). The 8-shape gets filled with 1, the 4-shape gets filled with 5.
+
+3. **Example 3**: Key is `[2,6] / [7,1]`. The 2-shape gets filled with 7.
+
+**Rule**: Find the 2-row key, read column by column where row 1 = shape color, row 2 = fill color. For each closed shape whose border color appears in the key, fill its interior 0s with the corresponding fill color.
+
+**Applying to Test Input:**
+
+1. **Identify Key** (rows 11-12, cols 0-4):
+   ```
+   5,4,6,7,8
+   9,8,3,1,2
+   ```
+   Mappings: 5→9, 4→8, 6→3, 7→1, 8→2
+
+2. **Identify Shapes**:
+   - 1-shape (rows 0-3): 1 not in key → no fill
+   - 3-shape (rows 0-3): 3 not in key (it's a fill value) → no fill
+   - 5-shape (rows 5-9): 5 is in key → fill with 9
+   - 2-patterns: These are cross shapes, not closed shapes
+
+3. **5-shape interior**: Looking at the 5-outline:
+   - Row 6: 5 at col 7, 0s at cols 8-10, 5 at col 11 → fill (6,8), (6,9), (6,10)
+   - Row 7: 5 at col 7, 0s at cols 8-11, 5 at col 12 → fill (7,8), (7,9), (7,10), (7,11)
+
+**Output:**
+
+```
+0,1,1,1,1,1,0,0,3,3,3,3,0
+0,1,0,0,0,1,0,0,3,0,0,3,0
+0,1,1,0,0,1,0,0,3,0,0,3,0
+0,0,1,1,1,1,0,0,3,3,3,3,0
+0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,5,5,5,0,0
+0,0,2,0,0,0,0,5,9,9,9,5,0
+0,2,0,2,0,0,0,5,9,9,9,9,5
+0,0,2,0,0,0,0,0,5,5,5,5,5
+0,0,0,0,0,0,0,0,5,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,2,0,0
+5,4,6,7,8,0,0,0,0,2,0,2,0
+9,8,3,1,2,0,0,0,0,0,2,0,0
+```

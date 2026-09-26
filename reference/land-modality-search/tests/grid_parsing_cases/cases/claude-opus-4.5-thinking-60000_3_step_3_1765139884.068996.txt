@@ -1,0 +1,42 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+1. **Finding the 5 markers**: Each example has two L-shaped patterns made of 5s pointing in opposite directions:
+   - Pattern 1 (5,5 / 5,0): marks one corner
+   - Pattern 2 (0,5 / 5,5): marks the opposite corner
+
+2. **Output dimensions**: The distance between the corners of these L-shapes determines output size:
+   - Example 1: (28-26+1)×(24-19+1) = 3×6 ✓
+   - Example 3: (17-1+1)×(27-25+1) = 17×3 ✓
+
+3. **Pattern extraction**: The output shows the basic pattern unit stretched/tiled to fill the defined region.
+
+**Analyzing the test input:**
+
+The 5 markers are at:
+- Rows 15-16, cols 6-7: L-shape pointing down-right (corner at row 15, col 6)
+- Rows 21-22, cols 21-22: L-shape pointing up-left (corner at row 22, col 22)
+
+Output dimensions: (22-15+1)×(22-6+1) = **8 rows × 17 columns**
+
+**Identifying the basic pattern unit:**
+Looking at rows 0-1, the main pattern is:
+```
+3,3,3,3,3
+3,0,0,0,3
+```
+This is a 5-column, 2-row unit with 3s on all edges of row 0, and 3s only at left/right edges of row 1.
+
+**Applying the transformation:**
+- Horizontal: Stretch from 5 to 17 columns (maintaining edge 3s)
+- Vertical: Tile from 2 to 8 rows (repeat 4 times)
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+```

@@ -1,0 +1,48 @@
+Looking at the examples, I need to identify:
+1. The two 5-marker groups that define the output dimensions
+2. The pattern to extend and fill those dimensions
+
+**Finding the 5-markers in the test input:**
+- Upper-left group (rows 15-16, columns 6-7): Forms L-shape `5,5 / 5,0`
+- Lower-right group (rows 21-22, columns 21-22): Forms L-shape `0,5 / 5,5`
+
+**Calculating output dimensions:**
+- Rows: 15 to 22 = 8 rows
+- Columns: 6 to 22 = 17 columns
+
+**Identifying the base pattern:**
+The main pattern shows nested structures with colors 3 and 2. The innermost pattern (rows 0-1, columns 12-16) is:
+```
+3,3,3,3,3
+3,0,0,0,3
+```
+
+This is a 2-row × 5-column unit with:
+- Solid top row (all 3s)
+- Bottom row with edge 3s and interior 0s
+
+**Extension rules observed from examples:**
+- Example 1: Pattern extended horizontally by expanding interior while preserving edges
+- Example 3: Pattern extended vertically by repeating the row pattern
+
+**Applying to test:**
+The 5-column pattern needs to extend to 17 columns:
+- Left edge column: 3,3
+- Interior (15 columns): 3,0 pattern
+- Right edge column: 3,3
+
+Row 0: All 3s (17 columns)
+Row 1: 3 + fifteen 0s + 3
+
+This 2-row unit repeats 4 times to fill 8 rows.
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3
+```

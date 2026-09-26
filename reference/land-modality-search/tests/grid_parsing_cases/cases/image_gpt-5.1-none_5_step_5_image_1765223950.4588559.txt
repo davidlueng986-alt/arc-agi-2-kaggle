@@ -1,0 +1,137 @@
+Explanation of the transformation
+---------------------------------
+
+1. **Overall structure**
+
+   - The large grids are mainly color `8` (background) with many identical black “plus” shapes made of color `0`.
+   - On the border of the grid there are a few non‑8, non‑0 colored pixels (single cells).
+   - In the outputs, those isolated colored pixels disappear from the edges, and instead one of the black plus shapes gets filled with that color.
+
+2. **How a plus is defined**
+
+   By looking at the examples:
+   - Each plus shape is a 4‑connected component of color `0` whose pattern is:
+
+     ```
+     0
+     000
+     000
+     000
+      0
+     ```
+
+     or equivalently a 3×3 block with the four edge neighbours also 0 (total 9 cells: a square with its four side cells).
+
+   They are tiled in a grid pattern inside the sea of 8s.
+
+3. **Mapping border pixels to pluses**
+
+   From Example 2 (more informative):
+   - Input has three colored border pixels: `7`, `1`, `4`.
+   - Output has three filled pluses:
+     - The top‑left plus is filled with `7`.
+     - A central‑right plus is filled with `1`.
+     - A bottom‑middle plus is filled with `4`.
+
+   Comparison with Example 1:
+   - Input has one extra `4` on the left border.
+   - Output has exactly one `4` plus, in the middle‑lower region.
+
+   Observations:
+   - The number of filled pluses equals the number of border pixels.
+   - The **order along the border** (traversing clockwise) matches the **order of pluses in a fixed scan order**.
+   - From Example 2 we can see that:
+     - If we list the border pixels in **clockwise order starting from the top‑left corner**, we get `[7 (top‑left corner), 1 (middle of a right edge), 4 (bottom‑left corner edge)]`.
+     - If we list all plus centers in **row‑major order** (top‑to‑bottom, left‑to‑right), the ones filled in output are the 1st, 5th, and 9th in that order, corresponding respectively to those three border colors.
+
+   So the rule is:
+
+   > 1. Extract the colors of all non‑8, non‑0 pixels that lie on the outer border of the grid, in clockwise order starting from cell (0,0), moving right, then down, then left, then up.
+   > 2. Identify all plus shapes of color 0 and order them by the row of their center, then by the column of their center (row‑major).
+   > 3. For the i‑th border color, fill **all cells** of the i‑th plus shape with that color.
+   > 4. Finally, any original border pixels are overwritten by the standard background pattern (so they vanish) where applicable, but in the given tasks the background remains 8 and nothing special is needed beyond assigning new colors to the selected pluses.
+
+4. **Apply to the test input**
+
+   The test grid is 16×16 (same as Example 2).
+
+   **Step 1: Border colors in clockwise order**
+
+   Border cells that are neither 8 nor 0:
+
+   - Top row (r=0): `[1,8,8,8,8,1,8,8,8,8,1,8,8,8,8,0]`
+     → at c=0 color `1`; c=5 color `1`; c=10 color `1`. The 0 at c=15 is black, so ignored.
+   - Right column (c=15): scanning rows 1..15 gives only 0 and 8 → no new colors.
+   - Bottom row (r=15, c=15→0): `[0,8,8,8,8,0,8,8,8,8,0,8,8,8,8,0]` → only 0 and 8.
+   - Left column (c=0, r=15→1): rows 15..1 are (0,8,8,8,8,4,8,8,8,8,1,8,8,8,8)
+     → at r=5 we see `1`; at r=10 we see `4`. (r=0 already counted.)
+
+   So the ordered COLORS list along the border is:
+
+   1. `1` at (0,0)
+   2. `1` at (0,5)
+   3. `1` at (0,10)
+   4. `1` at (5,0)
+   5. `4` at (10,0)
+
+   → `[1, 1, 1, 1, 4]`
+
+   **Step 2: List all plus shapes and their centers**
+
+   As in Example 2, the grid of pluses is 3×3:
+
+   Centers (row, col) indices:
+
+   1. (2,2)
+   2. (2,7)
+   3. (2,12)
+   4. (7,2)
+   5. (7,7)
+   6. (7,12)
+   7. (12,2)
+   8. (12,7)
+   9. (12,12)
+
+   **Step 3: Assign colors to pluses**
+
+   We have 5 border colors, so we recolor the first 5 pluses in this list:
+
+   - Plus 1 at (2,2) → color `1`
+   - Plus 2 at (2,7) → color `1`
+   - Plus 3 at (2,12) → color `1`
+   - Plus 4 at (7,2) → color `1`
+   - Plus 5 at (7,7) → color `4`
+
+   A plus consists of the 3×3 block centered at (r,c) plus the four orthogonal neighbours (but since these all lie within that 3×3 in this tiling, it’s effectively the 3×3 block that is 0). From examples, every 0 belonging to one plus is in that contiguous 3×3 cross; we simply change those 0s to the new color.
+
+   Concretely (using 0‑based indices):
+
+   For center (2,2): rows 1..3, cols 1..3 become 1.  
+   For center (2,7): rows 1..3, cols 6..8 become 1.  
+   For center (2,12): rows 1..3, cols 11..13 become 1.  
+   For center (7,2): rows 6..8, cols 1..3 become 1.  
+   For center (7,7): rows 6..8, cols 6..8 become 4.
+
+   All other 0s remain 0 (untouched pluses).
+
+   Performing this recoloring on the test input gives the final output below.
+
+Completed output grid
+---------------------
+
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,0
+8,8,1,1,8,8,8,1,1,8,8,1,1,1,8,8
+8,1,1,1,1,8,1,1,1,1,8,1,1,1,1,8
+8,1,1,1,1,8,1,1,1,1,8,1,1,1,1,8
+8,8,1,1,8,8,8,1,1,8,8,1,1,1,8,8
+1,8,8,8,8,0,8,8,8,8,4,8,8,8,8,0
+8,8,1,1,8,8,4,4,4,8,8,8,0,0,8,8
+8,1,1,1,1,4,4,4,4,4,8,0,0,0,0,8
+8,1,1,1,1,4,4,4,4,4,8,0,0,0,0,8
+8,8,1,1,8,8,4,4,4,8,8,8,0,0,8,8
+4,8,8,8,8,4,8,8,8,8,4,8,8,8,8,0
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,0,0,0,0,8,0,0,0,0,8,0,0,0,0,8
+8,8,0,0,8,8,8,0,0,8,8,8,0,0,8,8
+0,8,8,8,8,0,8,8,8,8,0,8,8,8,8,0

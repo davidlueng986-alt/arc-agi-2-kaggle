@@ -1,0 +1,93 @@
+**Solution Path**
+
+Okay, so the goal is to figure out the rule that transforms the grid examples into their output states, and then apply that rule to a test input. I need to break down the examples, identify patterns, and find what colors are changing and how. Let's look at each example and see how the inputs get turned into outputs.
+
+*   **Example 1**: I see several shapes of colored pixels.  A yellow "C", a green blob, and an orange shape.  In the first output, the yellow shape now has magenta inside.  That's interesting. The inside of green turns green, and orange stays the same.  Why is that? Maybe that noise area is the key here.  I see a bunch of numbers there.  Perhaps it's a mapping of colors. Let's look closer: the noise area looks like a "dictionary" or "key" that tells which colours should change. I also see a number block in the top right.
+    *   I'm betting that the numbers in the "noise" block are the key, and they tell me what color to change them into. If a color exists in the "key," it gets transformed.
+    *   In the first input, the yellow `4` changes to the magenta `6`, and there is a `4` and `6` in adjacent places in the key, and therefore becomes the new color.  The green `3` stays green.  There is not a `3,3` pair in the key.
+    *   The second and third parts have the same rule.  I think I'm on to something.
+*   **Example 2**:  Okay, now I have a teal shape, a gray shape, and a yellow shape in the input grid, and I think I know what to look for.  The yellow shape turns gray. I also see a noise block again.  That block looks like the previous ones, so it must be the key.  Teal goes to blue, and the yellow and gray have the adjacent key values.  I see horizontal relationships here: `2,6`  `4,5`  `6,8`  `8,1` in the noise key.
+*   **Example 3**:  So I have a red shape. It turns orange.  Noise is in the top left.  `0,2,6,0` then `0,7,1,0` looks vertical here.  The red shape turns orange, so that is `2,7`.
+    *   So this tells me it is the short side that makes the rule vertical.  This must be the rule.
+*   **The Big Picture**:  My hypothesis is that the short side of the "key" determines the direction to read pairs. So now I need to solidify my rule.
+    *   Locate the "Legend" block which is the key.
+    *   If the Height > Width, pairs are vertical and if the Width > Height, pairs are horizontal.
+    *   If a pair is `A, B`, it defines a rule: enclosed area of color A should be filled with color B.
+    *   So that seems like the full rule!
+
+Now, the "Test Input": I see a similar grid with colored shapes and a "legend" at the bottom. The legend is 2 rows high, 5 columns wide. This means the pairs are formed vertically here. I see the pairs. So I'm looking at the key and going to apply that to the shapes. I know I have to find if there are any keys in the shapes.
+
+*   I check the shape colors, blue, green, red and grey.
+*   Keys: 5,4,6,7,8 -> 9,8,3,1,2.
+*   I can see that a shape has the color `5` so the Key -> Value is `5 -> 9`.
+*   Therefore I apply it: the grey shape will be filled.
+*   This means the grid stays the same but the holes in the gray shape, which are currently zeros, become 9s.
+*   It's likely the blue, green, and red shapes won't get filled because their colors aren't present at the key side of the pairs.
+*   Double-checking the 4-connectivity rule and diagonal gaps, I verify the grey shape is fillable because the boundary has diagonal steps as well as horizontal ones.
+*   Finally, I construct the final output. The holes turn into maroon colors in the grey regions and I'm good to go!
+
+
+The task requires identifying a transformation rule from the solved examples and applying it to the test input.
+
+**Analysis of Examples:**
+1.  **Identify Objects:** The grids contain "shapes" (monochromatic loops or frames enclosing empty `0` space) and a "legend" (a rectangular block of heterogeneous colored pixels).
+2.  **Transformation Rule:** The "legend" block defines a mapping from the shape's border color to a fill color.
+    *   **Finding the Mapping:**
+        *   Locate the distinct block of random-looking colors (the legend).
+        *   Determine the orientation of the pairs based on the dimensions of the legend block.
+            *   **Example 1:** Legend is 2 rows high, 5 columns wide. Pairs are vertical (Top pixel $\to$ Bottom pixel). Yellow (4) maps to Magenta (6). Green (3) maps to Green (3).
+            *   **Example 2:** Legend is 4 rows high, 2 columns wide. Pairs are horizontal (Left pixel $\to$ Right pixel). Yellow (4) maps to Grey (5). Teal (8) maps to Blue (1).
+            *   **Example 3:** Legend is 2 rows high (columns 1-2). Pairs are vertical. Red (2) maps to Orange (7).
+    *   **Applying the Mapping:**
+        *   For each shape in the grid, check its color against the "Key" pixels in the legend.
+        *   If a match is found, fill the empty `0`s inside the shape with the corresponding "Value" color from the legend.
+        *   If no match is found (e.g., Orange in Ex 1, Grey in Ex 2), the shape remains unfilled (0s remain 0s).
+
+**Analysis of Test Input:**
+1.  **Shapes:**
+    *   Blue (1) shape at top-left.
+    *   Green (3) shape at top-right.
+    *   Red (2) shape at middle-left/bottom-left (disjoint lines forming a diamond).
+    *   Grey (5) shape at middle-right.
+2.  **Legend:**
+    *   Located at the bottom-left (Rows 11-12, Columns 0-4).
+    *   Block:
+        ```
+        5,4,6,7,8
+        9,8,3,1,2
+        ```
+    *   Dimensions: 2 rows high, 5 columns wide. Since Height (2) < Width (5), pairs are **Vertical** (Top $\to$ Bottom).
+    *   **Mappings:**
+        *   5 $\to$ 9
+        *   4 $\to$ 8
+        *   6 $\to$ 3
+        *   7 $\to$ 1
+        *   8 $\to$ 2
+3.  **Application:**
+    *   **Blue Shape (1):** Is `1` a Key in the legend? No. (Keys are 5, 4, 6, 7, 8). **Action: No Change.**
+    *   **Green Shape (3):** Is `3` a Key? No. **Action: No Change.**
+    *   **Red Shape (2):** Is `2` a Key? No. **Action: No Change.**
+    *   **Grey Shape (5):** Is `5` a Key? Yes. `5` maps to `9`. **Action: Fill interior with 9 (Maroon).**
+
+**Execution:**
+*   Locate the Grey (5) shape.
+*   The interior 0s are at:
+    *   Row 6: Columns 8, 9, 10.
+    *   Row 7: Columns 8, 9, 10, 11.
+*   Replace these 0s with 9s.
+*   All other cells remain identical to the input.
+
+**Output Generation:**
+0,1,1,1,1,1,0,0,3,3,3,3,0
+0,1,0,0,0,1,0,0,3,0,0,3,0
+0,1,1,0,0,1,0,0,3,0,0,3,0
+0,0,1,1,1,1,0,0,3,3,3,3,0
+0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,5,5,5,0,0
+0,0,2,0,0,0,0,5,9,9,9,5,0
+0,2,0,2,0,0,0,5,9,9,9,9,5
+0,0,2,0,0,0,0,0,5,5,5,5,5
+0,0,0,0,0,0,0,0,5,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,2,0,0
+5,4,6,7,8,0,0,0,0,2,0,2,0
+9,8,3,1,2,0,0,0,0,0,2,0,0

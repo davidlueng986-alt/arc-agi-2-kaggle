@@ -1,0 +1,50 @@
+Here is how I interpreted the transformation and how I applied it to the test input.
+
+---
+
+### Reasoning
+
+From the examples and the hints, the key ideas seem to be:
+
+1. **Identify large background-like regions.**  
+   In all three grids, there are big, mostly uniform areas that don’t contain the “interesting” multi-colored structures.
+
+2. **Keep the region where the compact, mixed-color components live.**  
+   In the test input, all of the non–background colors (2,4,5,6,7,8,9,0) appear only in the *lower* part of the grid, embedded in a big field of color `1`.  
+   The upper part (rows 1–10) is mostly color `3` and `1` with no such components, and the very last row (row 25) is just all `1`.
+
+3. **Choose the uniform background from the prominent object region.**  
+   In the lower part that actually contains the interesting structures, the background is already uniformly `1`.
+
+4. **Crop away the pure background-only rows.**  
+   - All “interesting” non-background colors are confined to rows 12–24.  
+   - Rows 1–11 contain only the large background-like areas with no compact components.  
+   - Row 25 is also pure background (`1`s only).  
+   So the minimal rectangle that contains all of the desired components is rows 12–24 and the full width of the grid.
+
+5. **The resulting region already has the compact components on a uniform background, so no further rearrangement is needed.**  
+   Taking rows 12–24 gives a 13×25 grid where:
+   - The background is uniformly color `1`.
+   - All the multi-colored components (in colors 9,6,8,4,2,5,7,0) are preserved with their shapes and relative arrangement.
+
+Thus, for the test, the transformation amounts to keeping rows 12 through 24 of the input as the output.
+
+---
+
+### Output grid
+
+Rows 12–24 of the input:
+
+1,9,9,1,1,1,1,6,6,6,6,6,1,1,1,4,4,1,1,2,2,2,1,1,1  
+1,9,9,1,1,1,1,6,8,6,8,6,1,1,1,4,4,1,1,2,5,2,1,1,1  
+1,9,9,1,1,1,1,6,6,8,6,6,1,1,1,4,4,1,1,2,2,2,1,1,1  
+1,9,9,1,1,1,1,6,8,6,8,6,1,1,1,4,4,1,1,2,5,2,1,1,1  
+1,9,9,1,1,1,1,6,6,8,6,6,1,1,1,4,4,1,1,2,2,2,1,1,1  
+1,9,9,1,1,1,1,6,6,6,6,6,1,1,1,4,4,1,1,2,5,2,1,1,1  
+1,9,9,1,4,4,1,1,1,1,1,1,1,1,1,9,9,1,1,2,2,2,1,1,1  
+1,9,9,1,4,4,1,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,1,1,1  
+1,1,1,1,4,4,1,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,8,8,1  
+1,1,1,1,4,4,1,1,1,1,1,1,1,1,5,5,1,1,1,6,1,1,8,8,1  
+1,8,8,1,4,4,1,0,1,0,1,1,1,1,5,5,1,1,1,6,1,1,1,1,1  
+1,8,8,1,4,4,1,1,1,1,1,1,1,1,5,5,1,1,1,6,1,1,1,1,1  
+1,1,1,1,9,9,1,0,1,0,1,1,1,1,1,1,1,1,1,6,1,1,1,1,1

@@ -1,0 +1,36 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+1. **Find the "3" marker** - This acts as a reference point for drawing paths
+2. **Identify patterns of 1s and 2s** - These are vertical or horizontal lines with 1s marking endpoints/breaks
+3. **Convert all 1s to 2s** - The patterns become solid lines of 2s
+4. **Draw 3-paths** - From the 3's position, draw an L-shaped or rectangular path that creates boundaries around/between the patterns
+
+In the test input:
+- The 3 is at position (6, 25)
+- Pattern 1: Column 1, rows 0-5 (1 at row 0)
+- Pattern 2: Column 7, rows 5-13 (1s at rows 11, 13)
+- Pattern 3: Column 17, rows 0-9 (1s at rows 0, 2, 4)
+
+The transformation:
+1. Convert all 1s to 2s
+2. Draw a rectangular 3-path from the 3's position:
+   - Horizontal line at row 6 extending left to col 4 (left extension) and from col 21 to the 3
+   - Vertical edges at columns 4 and 21, going from row 6 to row 9
+   - Bottom edge at row 9 connecting the verticals (skipping pattern columns)
+
+```
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+8,2,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8
+3,3,3,3,3,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,3,3,3,3,3
+8,8,8,8,3,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,3,8,8,8,8
+8,8,8,8,3,8,8,2,8,8,8,8,8,8,8,8,8,2,8,8,8,3,8,8,8,8
+8,8,8,8,3,3,3,2,3,3,3,3,3,3,3,3,3,2,3,3,3,3,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,2,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+```

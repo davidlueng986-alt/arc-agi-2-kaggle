@@ -1,0 +1,385 @@
+**Understanding the rule from the examples**
+
+1. **Background vs objects**
+
+- In both training examples the background is a single color (0 in Example 1, 5 in Example 2).
+- All non‑background pixels form **objects**: monochromatic pixel clusters.  
+- It’s natural (and consistent with the shapes) to treat connectivity as **8‑connected within the same color** (pixels touching diagonally of same color belong to the same object).  
+  - Example 1: the three disjoint “2” components (a 3×3 block and two diagonals) are 8‑connected into one object, which moves as a whole.
+  - In our test, diagonal 5’s and 3’s around donuts form big hollow objects, not many little ones.
+
+2. **Top vs bottom classification**
+
+Looking at both examples:
+
+- Objects that are **hollow or clearly branched** (crosses, T’s, donuts / rings, lantern‑like shapes) are moved **upwards** so that their topmost pixel lies on the **top row**.
+- Objects that are **solid blobs or simple paths** (blocks, triangles, simple L/Z paths, etc.) are moved **downwards** so that their bottommost pixel lies on the **bottom row**.
+- The **horizontal positions are preserved**; only vertical translation happens.
+- All original object pixels are cleared from their old locations; only the shifted ones remain.
+
+Examples consistency:
+
+- Example 1:
+  - Color 3 cross and color 1 T‑shape → **branched** → moved to top.
+  - Color 4 L and color 2 solid block+ends → **solid/path‑like** → moved to bottom.
+- Example 2:
+  - Color 2 donut, color 3 lantern, and small kinked shapes (7, 9) → treated as **branched/hollow** → moved up.
+  - Color 1 and 4 triangular “pyramids” → **solid** → moved down.
+
+No different‑colored objects overlap after moving (so we’ll aim to keep that property on the test as well).
+
+---
+
+## Step 1: Analyze the test input
+
+Background color is **1** (it fills most of the grid).
+
+Grid size: 25 rows × 25 columns.
+
+We find monochromatic 8‑connected components of colors {2,3,4,5}.
+
+### Color 2 object
+
+Coordinates (r,c):
+
+- (3,6),(3,7),(3,8)
+- (4,6)
+- (5,4),(5,5),(5,6)
+
+These are all 8‑connected into a **single object**:
+
+Visual (rows 3–5, cols 4–8; ‘2’ shown as X):
+
+```
+r3: ..XXX
+r4: ..X..
+r5: XXX..
+```
+
+This is a **simple polyline / Z‑path** with no holes: purely path‑like.
+
+→ **Classification**: solid/path‑like → **move to bottom**.
+
+---
+
+### Color 5 object(s)
+
+Non‑background 5’s:
+
+- (4,20)
+- (5,21),(5,22),(5,23)
+- (6,21),(6,23)
+- (7,21),(7,22),(7,23)
+- (8,20),(8,24)
+
+Under 8‑connected, all of these are one object (corner singletons diagonal‑touch the central block):
+
+Bounding box rows 4–8, cols 20–24:
+
+```
+r4: X....
+r5: .XXX.
+r6: .X.X.
+r7: .XXX.
+r8: X...X
+```
+
+Inside that, there is a **3×3 ring with a hole** around (6,22), plus extra corner pixels – still a clearly **hollow, donut‑like** object.
+
+→ **Classification**: hollow → **move to top**.
+
+---
+
+### Color 3 objects
+
+Color 3 appears in two separated regions: a left “square with spikes” and a right path.
+
+#### Left color‑3 object (ring with corners)
+
+Coordinates:
+
+- (12,5),(12,9)
+- (13,6),(13,7),(13,8)
+- (14,6),(14,8)
+- (15,6),(15,7),(15,8)
+- (16,5),(16,9)
+
+These are all 8‑connected. Bounding box rows 12–16, cols 5–9, visual:
+
+```
+r12: X...X
+r13: .XXX.
+r14: .X.X.
+r15: .XXX.
+r16: X...X
+```
+
+There is a **hole in the middle** (around (14,7)) and the outer ring has four corner spikes. This is a classic **hollow / branched** structure.
+
+→ **Classification**: hollow → **move to top**.
+
+#### Right color‑3 object (path)
+
+Coordinates:
+
+- (12,19)
+- (13,19)
+- (14,19),(14,20),(14,21)
+- (15,21)
+- (16,21)
+
+Visual (rows 12–16, cols 19–21):
+
+```
+r12: 3..
+r13: 3..
+r14: 333
+r15: ..3
+r16: ..3
+```
+
+That’s a simple **bent path (L/Z‑like)**, no hole, no branching junction with more than two arms.
+
+→ **Classification**: path‑like → **move to bottom**.
+
+So for color 3 we have **two objects**:
+- left hollow object → top,
+- right path object → bottom.
+
+---
+
+### Color 4 object
+
+Coordinates:
+
+- (21,13)
+- (22,13),(22,14),(22,15),(22,16)
+- (23,14)
+
+Bounding rows 21–23, cols 13–16, visual:
+
+```
+r21: 4...
+r22: 4444
+r23: .4..
+```
+
+Centre (22,14) has three neighbors (up, right, down), giving a **branched / cross‑like** structure (an asymmetric T/Cross).
+
+No hole, but clearly branched rather than a solid block or simple path.
+
+→ **Classification**: branched → **move to top**.
+
+---
+
+### Summary of objects and directions
+
+Using 8‑connected, monochromatic components:
+
+- **To TOP (branched / hollow):**
+  - Color 5 donut with corner pixels.
+  - Color 3 left hollow / ring object.
+  - Color 4 branched “T/cross” object.
+
+- **To BOTTOM (solid / path‑like):**
+  - Color 2 path object.
+  - Color 3 right path object.
+
+---
+
+## Step 2: Compute the vertical shifts
+
+Grid height \(H = 25\).  
+
+For each object:
+
+- **Top‑moving**: shift by \(d_{\text{up}} = 1 - \min(\text{row})\).
+- **Bottom‑moving**: shift by \(d_{\text{down}} = H - \max(\text{row})\).
+
+Horizontal coordinates remain unchanged.
+
+### Color 2 path (bottom)
+
+Rows: 3–5 → \(\min r = 3,\ \max r = 5\).
+
+- \(d_{\text{down}} = 25 - 5 = 20\)
+
+Original coords → new coords:
+
+- (3,6) → (23,6)
+- (3,7) → (23,7)
+- (3,8) → (23,8)
+- (4,6) → (24,6)
+- (5,4) → (25,4)
+- (5,5) → (25,5)
+- (5,6) → (25,6)
+
+### Color 3 right path (bottom)
+
+Rows: 12–16 → \(\min r = 12,\ \max r = 16\).
+
+- \(d_{\text{down}} = 25 - 16 = 9\)
+
+Original → new:
+
+- (12,19) → (21,19)
+- (13,19) → (22,19)
+- (14,19) → (23,19)
+- (14,20) → (23,20)
+- (14,21) → (23,21)
+- (15,21) → (24,21)
+- (16,21) → (25,21)
+
+### Color 5 hollow object (top)
+
+Rows: 4–8 → \(\min r = 4\).
+
+- \(d_{\text{up}} = 1 - 4 = -3\)
+
+Original → new:
+
+- (4,20) → (1,20)
+- (5,21),(5,22),(5,23) → (2,21),(2,22),(2,23)
+- (6,21) → (3,21)
+- (6,23) → (3,23)
+- (7,21),(7,22),(7,23) → (4,21),(4,22),(4,23)
+- (8,20) → (5,20)
+- (8,24) → (5,24)
+
+### Color 3 left hollow object (top)
+
+Rows: 12–16 → \(\min r = 12\).
+
+- \(d_{\text{up}} = 1 - 12 = -11\)
+
+Original → new:
+
+- (12,5) → (1,5)
+- (12,9) → (1,9)
+- (13,6),(13,7),(13,8) → (2,6),(2,7),(2,8)
+- (14,6),(14,8) → (3,6),(3,8)
+- (15,6),(15,7),(15,8) → (4,6),(4,7),(4,8)
+- (16,5),(16,9) → (5,5),(5,9)
+
+### Color 4 branched object (top)
+
+Rows: 21–23 → \(\min r = 21\).
+
+- \(d_{\text{up}} = 1 - 21 = -20\)
+
+Original → new:
+
+- (21,13) → (1,13)
+- (22,13),(22,14),(22,15),(22,16) → (2,13),(2,14),(2,15),(2,16)
+- (23,14) → (3,14)
+
+No two different colors land on the same cell in these new positions.
+
+---
+
+## Step 3: Build the output grid
+
+Start from an all‑1s 25×25 grid (background), then write the moved objects at their new coordinates.
+
+### Rows 1–5 (top region, objects moved up)
+
+**Row 1:**
+- 3’s at c5, c9.
+- 4 at c13.
+- 5 at c20.
+
+`1,1,1,1,3,1,1,1,3,1,1,1,4,1,1,1,1,1,1,5,1,1,1,1,1`
+
+**Row 2:**
+- 3’s at c6,7,8.
+- 4’s at c13–16.
+- 5’s at c21–23.
+
+`1,1,1,1,1,3,3,3,1,1,1,1,4,4,4,4,1,1,1,1,5,5,5,1,1`
+
+**Row 3:**
+- 3’s at c6 and c8.
+- 4 at c14.
+- 5’s at c21 and c23.
+
+`1,1,1,1,1,3,1,3,1,1,1,1,1,4,1,1,1,1,1,1,5,1,5,1,1`
+
+**Row 4:**
+- 3’s at c6,7,8.
+- 5’s at c21–23.
+
+`1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1`
+
+**Row 5:**
+- 3’s at c5 and c9.
+- 5’s at c20 and c24.
+
+`1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,5,1`
+
+### Rows 6–20 (no objects after moving, all background)
+
+Each row 6–20:
+
+`1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+
+### Rows 21–25 (bottom region, objects moved down)
+
+**Row 21:**
+- 3 at c19.
+
+`1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1`
+
+**Row 22:**
+- 3 at c19.
+
+`1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1`
+
+**Row 23:**
+- 2’s at c6,7,8.
+- 3’s at c19,20,21.
+
+`1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,3,3,3,1,1,1,1`
+
+**Row 24:**
+- 2 at c6.
+- 3 at c21.
+
+`1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1`
+
+**Row 25:**
+- 2’s at c4,5,6.
+- 3 at c21.
+
+`1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1`
+
+---
+
+## Final output grid
+
+Putting all rows together:
+
+1. `1,1,1,1,3,1,1,1,3,1,1,1,4,1,1,1,1,1,1,5,1,1,1,1,1`
+2. `1,1,1,1,1,3,3,3,1,1,1,1,4,4,4,4,1,1,1,1,5,5,5,1,1`
+3. `1,1,1,1,1,3,1,3,1,1,1,1,1,4,1,1,1,1,1,1,5,1,5,1,1`
+4. `1,1,1,1,1,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,5,5,5,1,1`
+5. `1,1,1,1,3,1,1,1,3,1,1,1,1,1,1,1,1,1,1,5,1,1,1,5,1`
+6. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+7. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+8. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+9. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+10. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+11. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+12. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+13. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+14. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+15. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+16. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+17. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+18. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+19. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+20. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1`
+21. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1`
+22. `1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1,1,1`
+23. `1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,3,3,3,1,1,1,1`
+24. `1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1`
+25. `1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,3,1,1,1,1`

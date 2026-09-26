@@ -43,10 +43,22 @@ python src\make_submission.py                  # build submission.json (240 task
 | 2024 1st place re-baseline | ~2–6 | DSL + search |
 | Pure heuristic DSL (src/) | ~1 | this repo's starting point |
 
-**Scale-up plan**: `reference/qwen38-27b-solution-map.md` — full migration map
-to Qwen3.8-27B (QLoRA on 24GB L4, verified: unsloth support + Kaggle mirrors +
-cheap DeltaNet KV cache) with an Astra-inspired harness
-(hypothesis-verify loop + persistent reasoning state).
+**Strategy — HARNESS-FIRST (current plan)**: `reference/harness-first-qwen38-27b.md`.
+Drop SFT and TTT entirely; run Qwen3.8-27B locally via vLLM inside the notebook with a
+Poetiq-style code-refinement harness + Land-style holistic judge. Rationale: the
+published harness SOTA (54.0% / 72.9% on ARC-AGI-2, **no weight updates**) far exceeds
+the TTT lineage (Kaggle 2025 top 24%, 2026 best public notebook 33.89), the SFT
+checkpoint behind the TTT pipeline needs a 32-GPU cluster + 3.2M synthetic puzzles, and
+Kaggle's private #1 (Tufa Labs = MindsAI) is a **program-synthesis** solver.
+
+Superseded but retained: `reference/qwen38-27b-solution-map.md` (SFT/TTT scale-up path),
+`reference/reproduction-analysis.md` (4B TTT reproduction).
+
+Vendored open-source SOTA references in `reference/`:
+- `poetiq-solver/` — Poetiq ARC solver (54.0% verified semi-private); LiteLLM backend,
+  so pointing it at a local vLLM server is a ~10-line change.
+- `land-modality-search/` — Land's modality-driven search + holistic trace judging
+  (72.9% semi-private / 76.1% public), including `docs/ANALYZE_*.md` negative results.
 
 ## What the LB 33.89 notebook does (the one to fork)
 
@@ -67,6 +79,8 @@ better augmentation, dedup candidates across attempts to maximize the 2-shot hit
 
 ## Other pulled notebooks worth studying
 
+- `notebooks/land-solver-v7-kaggle/` — **Johan Land's own Kaggle notebook** for the
+  72.9% modality-search solver (API-based; useful as a Kaggle-runtime reference).
 - `notebooks/arc-highscore-lb3389-replica/` — clean replica of the LB 33.89 pipeline.
 - `notebooks/nvarc-winning-solution-t4x2/` — NVARC ARC'25 winning solution (T4x2).
 - `notebooks/reproduce-nvarc-2025-results/` — independent NVARC reproduction.

@@ -1,0 +1,279 @@
+Below is the reasoning I reconstructed from the three training examples, followed by the test output.
+
+---
+
+## 1. What the transformation does (pattern from the examples)
+
+### 1.1. Identify “frame colors” with border markers
+
+From the three examples:
+
+- Some colors form a **large main component** (often frame-like or at least extended), and the **same color also appears in one small component that touches the outer border** of the grid.
+- This small border component acts as a **marker** for that color.
+
+Examples:
+
+- Example 1:
+  - Color 4:
+    - Large component: the 3×5 rectangle of 4’s at the top-left.
+    - Marker: the single 4 at (row1,col9) on the top border.
+  - Color 3:
+    - Large component: the big irregular 3-shape in the lower left.
+    - Marker: the tiny 2-cell vertical pair of 3’s at (1,8)–(2,8), touching the top border.
+- Example 2:
+  - Color 8:
+    - Large component: 4×4 hollow rectangle of 8’s at top-right.
+    - Markers: 8s at (3,2) and (4,1); we pick the one on the outer border: (4,1) on the left edge.
+  - Color 4:
+    - Large component: the 4-rectangle at bottom-right.
+    - Marker: single 4 at (2,1) on the left edge.
+  - Color 5:
+    - Large component: a plus-like region bottom-left.
+    - Marker: a single 5 at (2,2) but **not on** the outer border → 5 is *not* used as a frame color.
+- Example 3:
+  - Color 2:
+    - Large component: right-side 2-frame with two interior holes.
+    - Marker: single 2 at (1,2) on the top border.
+  - Color 4:
+    - Only one component (the big 4-rectangle), no separate border marker → not processed.
+
+So, the rule only applies to colors that:
+
+1. Have at least one **large main component** (size ≥ 4, visually a “main shape”).
+2. Have at least one **separate component of size 1 or 2** that **touches the outer border** (top row, bottom row, left col, or right col).
+
+### 1.2. Tag color from the marker
+
+For each such color \(C\):
+
+1. Choose the **marker component** that touches the outer border (we use the border-touching one; if multiple, we pick the obvious one in examples).
+2. From the marker cell, look **inward, away from the border**:
+   - If on top border → look one cell **down**.
+   - If on bottom border → look one cell **up**.
+   - If on left border → look one cell **right**.
+   - If on right border → look one cell **left**.
+3. The color of that inward neighbor (non-zero) is the **tag color** \(T_C\) for color \(C\).
+
+Check against examples:
+
+- Example 1:
+  - C = 4:
+    - Marker: 4 at top edge (row1,col9).
+    - Inward direction from top edge = down → cell (2,9)=6 ⇒ \(T_4 = 6\).
+  - C = 3:
+    - Marker: top cell of small 3-pair at (1,8).
+    - Down neighbor (2,8)=3 ⇒ \(T_3 = 3\).
+- Example 2:
+  - C = 8:
+    - Marker: 8 at left edge (4,1).
+    - Inward direction from left edge = right → (4,2)=1 ⇒ \(T_8 = 1\).
+  - C = 4:
+    - Marker: 4 at left edge (2,1).
+    - Inward direction from left edge = right → (2,2)=5 ⇒ \(T_4 = 5\).
+- Example 3:
+  - C = 2:
+    - Marker: 2 at top edge (1,2).
+    - Inward direction from top edge = down → (2,2)=7 ⇒ \(T_2 = 7\).
+
+This exactly matches all given outputs.
+
+### 1.3. How the tag color is used
+
+For each such color \(C\) with tag color \(T_C\):
+
+- Restrict ourselves to its **large main component**.
+- Scan each row of the grid:
+  - Whenever in that row we see a pattern:
+
+    `C 0 0 ... 0 C`
+
+    where both C’s are part of the **same large component**, and everything between them is 0,
+
+  - Replace all those interior zeros with the **tag color** \(T_C\).
+
+This explains:
+
+- Example 1:
+  - For C=4, \(T_4 = 6\): in row2 we have 4–0–4 and 4–0–4 inside the big 4-block; zeros became 6.
+  - For C=3, \(T_3 = 3\): in several lower rows we have 3–0…0–3 within the large 3-shape; the zeros became 3.
+  - The 7-frame has no separate border marker color, so it is untouched despite having internal zeros between 7’s.
+- Example 2:
+  - For C=8, \(T_8 = 1\): the hollow 8-rectangle rows2–3 had 8–0…0–8; zeros became 1.
+  - For C=4, \(T_4 = 5\): rows7 and 9 have 4–0–4 inside the 4-rectangle; those zeros became 5.
+  - 5’s are not processed (their marker isn’t on the border).
+- Example 3:
+  - For C=2, \(T_2 = 7\): the right 2-rectangle has row patterns 2–0–2 where the zeros (at positions (2,12) and (3,13)) become 7.
+  - The 4-rectangle has no marker, so remains hollow.
+
+So the algorithm is:
+
+1. Find all colors satisfying the “frame + border marker” condition.
+2. For each such color:
+   - Determine tag \(T_C\) from the inward neighbor of the border marker.
+   - Fill horizontal zero gaps between two C’s (inside the big component) with \(T_C\).
+
+---
+
+## 2. Applying the rule to the test input
+
+The test grid (13×13) is:
+
+Row1:  0,1,1,1,1,1,0,0,3,3,3,3,0  
+Row2:  0,1,0,0,0,1,0,0,3,0,0,3,0  
+Row3:  0,1,1,0,0,1,0,0,3,0,0,3,0  
+Row4:  0,0,1,1,1,1,0,0,3,3,3,3,0  
+Row5:  0,0,0,0,0,0,0,0,0,0,0,0,0  
+Row6:  0,0,0,0,0,0,0,0,5,5,5,0,0  
+Row7:  0,0,2,0,0,0,0,5,0,0,0,5,0  
+Row8:  0,2,0,2,0,0,0,5,0,0,0,0,5  
+Row9:  0,0,2,0,0,0,0,0,5,5,5,5,5  
+Row10: 0,0,0,0,0,0,0,0,5,0,0,0,0  
+Row11: 0,0,0,0,0,0,0,0,0,0,2,0,0  
+Row12: 5,4,6,7,8,0,0,0,0,2,0,2,0  
+Row13: 9,8,3,1,2,0,0,0,0,0,2,0,0  
+
+### 2.1. Find colors with “frame + border marker” pattern
+
+We look for:
+
+- A large main component (size ≥ 4).
+- A small component (size 1 or 2) of the same color on the outer border.
+
+Check each relevant color:
+
+- Color 1:
+  - Large component: top-left cluster (rows1–4, cols2–6).
+  - Marker: single 1 at bottom border (row13,col4).
+  - ⇒ Color 1 qualifies.
+- Color 3:
+  - Large component: top-right 3-rectangle (rows1–4, cols9–12).
+  - Marker: single 3 at bottom border (row13,col3).
+  - ⇒ Color 3 qualifies.
+- Color 5:
+  - Large component: irregular 5-region in rows6–10 around cols8–13.
+  - Marker: single 5 at left border (row12,col1).
+  - ⇒ Color 5 also qualifies.
+- Color 2, 4, 6, 7, 8, 9:
+  - Either no sufficiently large main component, or no separate border marker, so they are not processed.
+
+Thus we process colors C ∈ {1, 3, 5}.
+
+### 2.2. Determine tag colors from border markers
+
+Use the inward-from-border rule:
+
+- **Color 1**:
+  - Marker: 1 at (13,4), on the **bottom** edge.
+  - Inward from bottom = **up** → cell (12,4) = 7.
+  - ⇒ \(T_1 = 7\).
+
+- **Color 3**:
+  - Marker: 3 at (13,3), on the **bottom** edge.
+  - Inward from bottom = **up** → cell (12,3) = 6.
+  - ⇒ \(T_3 = 6\).
+
+- **Color 5**:
+  - Marker: 5 at (12,1), on the **left** edge.
+  - Inward from left = **right** → cell (12,2) = 4.
+  - ⇒ \(T_5 = 4\).
+
+### 2.3. Fill horizontal gaps inside the large components
+
+Now, for each of these colors \(C\), only within the **main component**, scan rows and fill zero gaps between two C’s with \(T_C\).
+
+#### 2.3.1. Color 1, tag \(T_1 = 7\)
+
+Large 1-component is the top-left shape.
+
+Rows with 1-gaps inside that component:
+
+- Row2: `0,1,0,0,0,1,...`
+  - 1’s at columns 2 and 6, zeros at 3–5.
+  - Pattern: 1–0–0–0–1 ⇒ fill columns 3,4,5 with 7.
+- Row3: `0,1,1,0,0,1,...`
+  - 1’s at columns 3 and 6 with zeros at 4–5 (the 1 at col2 is just adjacent).
+  - Pattern between col3 and col6: 1–0–0–1 ⇒ fill columns 4,5 with 7.
+
+Rows1 and 4 have 1’s contiguous, so no gaps.
+
+After color-1 processing, top rows become:
+
+Row1: 0,1,1,1,1,1,0,0,3,3,3,3,0  
+Row2: 0,1,7,7,7,1,0,0,3,0,0,3,0  
+Row3: 0,1,1,7,7,1,0,0,3,0,0,3,0  
+Row4: 0,0,1,1,1,1,0,0,3,3,3,3,0  
+
+#### 2.3.2. Color 3, tag \(T_3 = 6\)
+
+Large 3-component is the top-right 4×4 rectangle:
+
+Rows1–4, Cols9–12:
+
+- Row2: `...,3,0,0,3,...` (3 at cols9 and 12, zeros at 10–11)
+  - 3–0–0–3 ⇒ fill cols10–11 with 6.
+- Row3: identical pattern; fill cols10–11 with 6.
+
+Rows1 and 4 are solid 3–3–3–3 with no internal 0s.
+
+So rows2–3 now:
+
+Row2: 0,1,7,7,7,1,0,0,3,6,6,3,0  
+Row3: 0,1,1,7,7,1,0,0,3,6,6,3,0  
+
+#### 2.3.3. Color 5, tag \(T_5 = 4\)
+
+Large 5-component is the mid-right region around rows6–10, cols8–13.
+
+Rows with gaps between 5’s:
+
+- Row7: `0,0,2,0,0,0,0,5,0,0,0,5,0`
+  - 5’s at cols8 and 12, zeros at 9–11.
+  - 5–0–0–0–5 ⇒ fill cols9–11 with 4.
+- Row8: `0,2,0,2,0,0,0,5,0,0,0,0,5`
+  - 5’s at cols8 and 13, zeros at 9–12.
+  - 5–0–0–0–0–5 ⇒ fill cols9–12 with 4.
+
+Rows6,9,10 have no horizontal zero gaps between two 5’s inside the big component.
+
+So after color-5 processing:
+
+Row7: 0,0,2,0,0,0,0,5,4,4,4,5,0  
+Row8: 0,2,0,2,0,0,0,5,4,4,4,4,5  
+
+All other rows remain as they were.
+
+---
+
+## 3. Final output grid
+
+Putting it all together, the completed output grid is:
+
+Row1:  0,1,1,1,1,1,0,0,3,3,3,3,0  
+Row2:  0,1,7,7,7,1,0,0,3,6,6,3,0  
+Row3:  0,1,1,7,7,1,0,0,3,6,6,3,0  
+Row4:  0,0,1,1,1,1,0,0,3,3,3,3,0  
+Row5:  0,0,0,0,0,0,0,0,0,0,0,0,0  
+Row6:  0,0,0,0,0,0,0,0,5,5,5,0,0  
+Row7:  0,0,2,0,0,0,0,5,4,4,4,5,0  
+Row8:  0,2,0,2,0,0,0,5,4,4,4,4,5  
+Row9:  0,0,2,0,0,0,0,0,5,5,5,5,5  
+Row10: 0,0,0,0,0,0,0,0,5,0,0,0,0  
+Row11: 0,0,0,0,0,0,0,0,0,0,2,0,0  
+Row12: 5,4,6,7,8,0,0,0,0,2,0,2,0  
+Row13: 9,8,3,1,2,0,0,0,0,0,2,0,0  
+
+So the output grid is:
+
+0,1,1,1,1,1,0,0,3,3,3,3,0
+0,1,7,7,7,1,0,0,3,6,6,3,0
+0,1,1,7,7,1,0,0,3,6,6,3,0
+0,0,1,1,1,1,0,0,3,3,3,3,0
+0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,5,5,5,0,0
+0,0,2,0,0,0,0,5,4,4,4,5,0
+0,2,0,2,0,0,0,5,4,4,4,4,5
+0,0,2,0,0,0,0,0,5,5,5,5,5
+0,0,0,0,0,0,0,0,5,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,2,0,0
+5,4,6,7,8,0,0,0,0,2,0,2,0
+9,8,3,1,2,0,0,0,0,0,2,0,0

@@ -1,0 +1,50 @@
+Looking at the examples, I need to understand the transformation pattern:
+
+## Pattern Analysis
+
+**Example 1 & 2 observations:**
+1. The input has a background color (8) with colored cells (4 in Example 1, 3 in Example 2) that form diagonal line segments
+2. These colored cells remain unchanged in the output
+3. New cells with value 2 are filled in between the diagonal lines
+4. The filling creates a "filled region" between parallel diagonal segments
+
+**Key rules I identified:**
+- The colored cells form diagonal lines going down-left (row increases, column decreases)
+- The 2s fill the space BETWEEN adjacent parallel diagonals
+- The first and last rows containing colored cells in a cluster don't get filled
+- Between two colored cells on the same row, the cells between them are filled
+- Near the edges of the shape (especially the bottom), filling becomes sparser
+
+## Applying to Test Input
+
+The test input has 9s forming three parallel down-left diagonals:
+- Diagonal 1: (4,4)→(5,3) (short segment)
+- Diagonal 2: (4,9)→(5,8)→(6,7)→(7,6)→(8,5)→(9,4)
+- Diagonal 3: (5,13)→(6,12)→(7,11)→(8,10)→(9,9)→(10,8)→(11,7)→(12,6)→(13,5)
+- Diagonal 4: (7,15)→(8,14)→(9,13)→(10,12)→(11,11)→(12,10)→(13,9)→(14,8)→(15,7)
+
+The filled region spans rows 4-15, but following the pattern:
+- Row 4 (first row): no filling
+- Rows 5-14: fill between adjacent 9s on each row
+- Row 15 (last row): no filling
+
+**Output:**
+
+```
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+8,8,8,8,9,8,8,8,8,9,8,8,8,8,8,8
+8,8,8,9,2,2,2,2,9,2,2,2,2,9,8,8
+8,8,8,8,8,8,8,9,2,2,2,2,9,8,8,8
+8,8,8,8,8,8,9,2,2,2,2,9,2,2,2,9
+8,8,8,8,8,9,2,2,2,2,9,2,2,2,9,8
+8,8,8,8,9,2,2,2,2,9,2,2,2,9,8,8
+8,8,8,8,8,8,8,8,9,2,2,2,9,8,8,8
+8,8,8,8,8,8,8,9,2,2,2,9,8,8,8,8
+8,8,8,8,8,8,9,2,2,2,9,8,8,8,8,8
+8,8,8,8,8,9,2,2,2,9,8,8,8,8,8,8
+8,8,8,8,8,8,2,2,9,8,8,8,8,8,8,8
+8,8,8,8,8,8,8,9,8,8,8,8,8,8,8,8
+```

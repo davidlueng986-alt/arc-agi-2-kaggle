@@ -1,0 +1,71 @@
+**Problem Decomposition and Pattern Recognition**
+
+Okay, here's what I'm thinking. The user wants me to crack an ARC puzzle. From what I see, it boils down to filling in the blanks of a grid based on some rules. I'm seeing a pattern, I think. Each example seems to have this "noise" or a block of pixels with a bunch of colors and shapes or closed regions of a specific color.
+
+**Mapping and Code Blocks**
+
+I think there's a mapping between the noise block and these shapes. Basically, the puzzle has a "code" or "key" that tells me how to change the grid, so maybe I can find the rule by going through each example. Like Example 1. It’s got this weird color block in the top right. And a bunch of shapes! Yellow, Green, Orange. Notice how yellow (4) has two empty spots and it got a 6 in those empty spots? And I think I know where it comes from! So the colors inside this noise block, I think those are the "keys" that correspond to those "shapes." In Ex1, the noise has a 4 and a 6.
+
+Let's look at the patterns across the examples. Ex 2 has the same stuff. And its noise has color pairs - and the shapes!  The Teal (8) got the value 1. The key-value pairs are in this noise block. So that means:
+ *   If the shape matches one of the values, you have to find that in the noise block.
+ *   Then the color to the "right" or "below" is the fill color.
+
+**Direction and Code Block Geometry**
+
+Okay, there is this "neighbor" rule: Is there a mapping and what neighbor it is. So the yellow box is horizontal and the green square is vertical. It depends on the size of this block. If the noise block is taller than wider (height > width), you move right to find the fill color. If the block is wider than taller, you go down in the color block. In example 1 the noise block is wide, and we look down to find the fill-color and we look right in Ex2. I can create a rule!
+
+**Applying the Rules to the Test Input**
+
+I'm starting to get this. The test input has its own grid. So, in this test the noise block is in the bottom left, and it's wider than tall. So the rule is to look below, to find the right color. The noise block has a bunch of numbers: 5,4,6,7,8; 9,8,3,1,2.
+So I see a bunch of shapes on the grid. They don't have matching values in the noise. Except Grey (5) and I know the rule, and I can figure the output.
+
+Okay, I'm confident about all the steps. It's time to build the output. I am done.
+
+
+Based on the solved examples, the puzzle requires identifying a "Key-Value" mapping block within the grid and using it to determine fill colors for the hollow shapes present.
+
+**Reasoning:**
+
+1.  **Identify the Code/Mapping Block:** In all examples, there is a distinct rectangular block of non-zero pixels that serves as a legend or code book.
+    *   In Example 1, it is a 5x2 block in the top-right.
+    *   In Example 2, it is a 2x4 block in the top-left.
+    *   In Example 3, it is a 2x2 block in the top-left.
+    *   In the **Test Input**, this block is located at the bottom-left (Rows 11-12, Cols 0-4). It is a 5x2 block.
+
+2.  **Determine Mapping Direction:** The dimensions of the block determine how to read the mapping.
+    *   If Width $\ge$ Height (as in Ex 1 and Ex 3), the mapping is **Vertical** (Top row color maps to Bottom row color).
+    *   If Height $>$ Width (as in Ex 2), the mapping is **Horizontal** (Left column color maps to Right column color).
+    *   For the Test Input (5x2), Width $>$ Height, so we use **Vertical Mapping**.
+
+3.  **Extract the Keys and Values:**
+    *   Top Row (Keys): `5, 4, 6, 7, 8`
+    *   Bottom Row (Values): `9, 8, 3, 1, 2`
+    *   The pairs are: `5->9`, `4->8`, `6->3`, `7->1`, `8->2`.
+
+4.  **Apply to Shapes:**
+    *   We identify the hollow shapes in the grid and check if their border color acts as a "Key".
+    *   **Blue (1) shape:** Color 1 is not in the Key list. **Action: Do not fill.**
+    *   **Green (3) shape:** Color 3 is not in the Key list. **Action: Do not fill.**
+    *   **Red (2) shapes:** Color 2 is not in the Key list. **Action: Do not fill.**
+    *   **Grey (5) shape:** Color 5 is in the Key list. The corresponding value is 9. **Action: Fill the interior of the Grey shape with color 9.**
+
+5.  **Execution:**
+    *   The Grey shape is located in the middle-right area (Rows 5-9).
+    *   We locate the enclosed zeros within the Grey boundary and change them to 9.
+    *   Specifically, at Row 6 (cols 8-10) and Row 7 (cols 8-11).
+
+**Output Grid:**
+
+0,1,1,1,1,1,0,0,3,3,3,3,0
+0,1,0,0,0,1,0,0,3,0,0,3,0
+0,1,1,0,0,1,0,0,3,0,0,3,0
+0,0,1,1,1,1,0,0,3,3,3,3,0
+0,0,0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0,0,0,5,5,5,0,0
+0,0,2,0,0,0,0,5,9,9,9,5,0
+0,2,0,2,0,0,0,5,9,9,9,9,5
+0,0,2,0,0,0,0,0,5,5,5,5,5
+0,0,0,0,0,0,0,0,5,0,0,0,0
+0,0,0,0,0,0,0,0,0,0,2,0,0
+5,4,6,7,8,0,0,0,0,2,0,2,0
+9,8,3,1,2,0,0,0,0,0,2,0,0

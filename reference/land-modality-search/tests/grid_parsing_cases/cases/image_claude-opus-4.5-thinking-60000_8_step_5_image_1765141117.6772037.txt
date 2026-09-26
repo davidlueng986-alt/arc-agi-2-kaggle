@@ -1,0 +1,33 @@
+Looking at the examples, I need to identify the transformation pattern:
+
+**Example 1**: Left side (cols 0-6) contains a mask pattern with 9s (foreground) and 4s (holes). Right side contains colored objects on 4 background. Output is mask-sized, with 9s preserved and holes filled with corresponding content.
+
+**Example 2**: Top section (rows 0-10) contains colored objects on 8 background. Bottom section (rows 11-19) contains mask with 2s (foreground) and 8s (holes). Output is mask-sized with 2s preserved and holes filled with content.
+
+**For the test input**:
+- Rows 0-9 form the mask (3s = foreground, 1s = holes)
+- Rows 10-24 contain colored objects on 1 background
+- Output should be 10 rows × 25 columns
+
+The transformation:
+1. Keep 3s (mask foreground) in place
+2. Where mask has 1s (holes), fill with corresponding content from below
+3. Since content has 15 rows and mask has 10, I need to scale/map accordingly
+
+For each mask row, I overlay the corresponding scaled content row (using ratio 15/10 = 1.5):
+- Mask row i pairs with content row floor(i × 1.5) + 10
+
+This ensures colored objects like 9,9, 6 pattern, 4s, 7,7,7,7, 8,8, and 5,5 appear in appropriate holes.
+
+```
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+3,3,3,1,1,3,3,6,6,3,3,3,3,1,3,3,3,3,3,3,3,3,1,1,3
+1,9,9,1,1,1,1,6,6,3,3,6,1,1,1,4,3,3,1,3,2,2,1,1,3
+1,9,9,1,1,1,1,6,8,3,3,6,1,1,1,4,4,1,1,2,5,2,1,1,3
+1,9,9,1,1,3,3,6,6,3,3,6,1,1,1,4,4,1,1,2,5,2,1,1,3
+1,9,9,1,4,3,3,1,1,1,1,1,1,1,1,9,3,3,1,3,3,3,1,1,1
+1,1,1,1,4,3,1,7,7,7,7,1,1,1,1,1,3,3,3,3,3,3,8,8,1
+1,1,1,1,4,3,3,1,1,3,3,1,1,1,5,5,3,3,3,3,3,3,8,8,1
+1,8,8,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,1
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
+```
