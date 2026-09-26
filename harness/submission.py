@@ -11,6 +11,8 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import threading
+import time
 from typing import Dict, List, Optional, Sequence
 
 from .grids import Grid
@@ -18,6 +20,16 @@ from .tasks import ARCTask
 
 PLACEHOLDER: Grid = [[0, 0], [0, 0]]
 ATTEMPT_KEYS = ("attempt_1", "attempt_2")
+WRITE_ATTEMPTS = 4
+WRITE_RETRY_DELAY = 0.05
+
+
+def _unlink_quietly(path: str) -> None:
+    try:
+        if os.path.exists(path):
+            os.unlink(path)
+    except OSError:
+        pass
 
 
 def _coerce_grid(obj: object) -> Grid:
@@ -59,6 +71,7 @@ class SubmissionWriter:
         self.data: Dict[str, List[Dict[str, Grid]]] = empty_submission(tasks)
         self.solved: Dict[str, int] = {}
         self.writes = 0
+        self._lock = threading.RLock()
         parent = os.path.dirname(os.path.abspath(path))
         if parent:
             os.makedirs(parent, exist_ok=True)
@@ -76,61 +89,44 @@ class SubmissionWriter:
             present = [k for k in ATTEMPT_KEYS if pred.get(k) is not None]
             grids = [_coerce_grid(pred[k]) for k in present]
             entry.append(build_entry(grids))
-        self.data[task_id] = entry
+        with self._lock:
+            self.data[task_id] = entry
 
     def write(self) -> None:
+        """Atomically snapshot the submission to disk.
+
+        Guarded by a re-entrant lock because the watchdog thread and the scheduler
+        thread both write. Without it, concurrent `os.replace` raises PermissionError
+        on Windows, and `json.dump` iterating `self.data` while `update` mutates it
+        raises "dictionary changed size during iteration" on Linux. Losing the write
+        at the generation deadline would cost the entire run, so the replace is also
+        retried briefly to ride out transient filesystem locks.
+        """
         directory = os.path.dirname(os.path.abspath(self.path)) or "."
-        fd, tmp = tempfile.mkstemp(dir=directory, prefix=".submission-", suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as fh:
-                json.dump(self.data, fh)
-            os.replace(tmp, self.path)
-            self.writes += 1
-        except BaseException:
-            if os.path.exists(tmp):
+        os.makedirs(directory, exist_ok=True)
+        with self._lock:
+            snapshot = json.dumps(self.data)
+            last_error: Optional[BaseException] = None
+            for attempt in range(WRITE_ATTEMPTS):
+                fd, tmp = tempfile.mkstemp(dir=directory, prefix=".submission-", suffix=".tmp")
                 try:
-                    os.unlink(tmp)
-                except OSError:
-                    pass
-            raise
+                    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                        fh.write(snapshot)
+                    os.replace(tmp, self.path)
+                    self.writes += 1
+                    return
+                except PermissionError as exc:
+                    last_error = exc
+                    _unlink_quietly(tmp)
+                    time.sleep(WRITE_RETRY_DELAY * (attempt + 1))
+                except BaseException:
+                    _unlink_quietly(tmp)
+                    raise
+            raise last_error if last_error else RuntimeError("submission write failed")
 
     def validate(self) -> List[str]:
-        errors: List[str] = []
-        for task_id in self.order:
-            task = self.tasks[task_id]
-            entries = self.data.get(task_id)
-            if entries is None:
-                errors.append(f"{task_id}: missing")
-                continue
-            if len(entries) != task.n_test:
-                errors.append(f"{task_id}: {len(entries)} entries, expected {task.n_test}")
-                continue
-            for i, entry in enumerate(entries):
-                if set(entry.keys()) != set(ATTEMPT_KEYS):
-                    errors.append(f"{task_id}[{i}]: keys {sorted(entry.keys())}")
-                    continue
-                for key in ATTEMPT_KEYS:
-                    grid = entry[key]
-                    if not isinstance(grid, list) or not grid:
-                        errors.append(f"{task_id}[{i}].{key}: empty")
-                        continue
-                    if not all(isinstance(r, list) and r for r in grid):
-                        errors.append(f"{task_id}[{i}].{key}: ragged or empty rows")
-                        continue
-                    width = len(grid[0])
-                    if any(len(r) != width for r in grid):
-                        errors.append(f"{task_id}[{i}].{key}: non-rectangular")
-                        continue
-                    if any(
-                        not isinstance(c, int) or isinstance(c, bool) or not 0 <= c <= 9
-                        for r in grid
-                        for c in r
-                    ):
-                        errors.append(f"{task_id}[{i}].{key}: cell outside 0..9")
-        extra = set(self.data) - set(self.order)
-        if extra:
-            errors.append(f"unexpected task_ids: {sorted(extra)[:5]}")
-        return errors
+        with self._lock:
+            return _validate_data(self.data, self.tasks, self.order)
 
     def is_complete(self) -> bool:
         return not self.validate()
@@ -141,11 +137,52 @@ class SubmissionWriter:
             return json.load(fh)
 
 
+def _validate_data(
+    data: Dict[str, List[Dict[str, Grid]]],
+    tasks: Dict[str, ARCTask],
+    order: Sequence[str],
+) -> List[str]:
+    errors: List[str] = []
+    for task_id in order:
+        task = tasks[task_id]
+        entries = data.get(task_id)
+        if entries is None:
+            errors.append(f"{task_id}: missing")
+            continue
+        if len(entries) != task.n_test:
+            errors.append(f"{task_id}: {len(entries)} entries, expected {task.n_test}")
+            continue
+        for i, entry in enumerate(entries):
+            if not isinstance(entry, dict) or set(entry.keys()) != set(ATTEMPT_KEYS):
+                errors.append(f"{task_id}[{i}]: keys {sorted(entry) if isinstance(entry, dict) else type(entry).__name__}")
+                continue
+            for key in ATTEMPT_KEYS:
+                grid = entry[key]
+                if not isinstance(grid, list) or not grid:
+                    errors.append(f"{task_id}[{i}].{key}: empty")
+                    continue
+                if not all(isinstance(r, list) and r for r in grid):
+                    errors.append(f"{task_id}[{i}].{key}: ragged or empty rows")
+                    continue
+                width = len(grid[0])
+                if any(len(r) != width for r in grid):
+                    errors.append(f"{task_id}[{i}].{key}: non-rectangular")
+                    continue
+                if any(
+                    not isinstance(c, int) or isinstance(c, bool) or not 0 <= c <= 9
+                    for r in grid
+                    for c in r
+                ):
+                    errors.append(f"{task_id}[{i}].{key}: cell outside 0..9")
+    extra = set(data) - set(order)
+    if extra:
+        errors.append(f"unexpected task_ids: {sorted(extra)[:5]}")
+    return errors
+
+
 def validate_submission_obj(
     submission: Dict[str, List[Dict[str, Grid]]], tasks: Sequence[ARCTask]
 ) -> List[str]:
-    writer = SubmissionWriter.__new__(SubmissionWriter)
-    writer.order = [t.task_id for t in tasks]
-    writer.tasks = {t.task_id: t for t in tasks}
-    writer.data = dict(submission)
-    return writer.validate()
+    return _validate_data(
+        submission, {t.task_id: t for t in tasks}, [t.task_id for t in tasks]
+    )

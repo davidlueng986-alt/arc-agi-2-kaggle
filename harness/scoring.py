@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from .grids import Grid, grids_equal
-from .submission import SubmissionWriter
+from .submission import SubmissionWriter, validate_submission_obj
 from .tasks import ARCTask
 
 
@@ -119,11 +119,6 @@ def score_submission(
 
 def validate_and_score(path: str, tasks: Sequence[ARCTask]) -> Tuple[List[str], Optional[ScoreReport]]:
     submission = SubmissionWriter.load(path)
-    errors = []
-    writer = SubmissionWriter.__new__(SubmissionWriter)
-    writer.order = [t.task_id for t in tasks]
-    writer.tasks = {t.task_id: t for t in tasks}
-    writer.data = submission
-    errors = writer.validate()
+    errors = validate_submission_obj(submission, tasks)
     report = score_submission(submission, tasks) if not errors else None
     return errors, report

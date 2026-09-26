@@ -421,6 +421,20 @@ reason the flag ladder exists.
    of engineering than any additional xhigh sample, and it is already in the
    "minimal" harness.
 
+6. **The watchdog itself was a single point of failure, and testing found it.** The
+   cumulative writer is written from two threads: the scheduler after each wave and
+   the watchdog daemon at `t_gen`. Unsynchronised, they collide at exactly the worst
+   moment in the run — concurrent `os.replace` raised
+   `PermissionError: [WinError 5]` on Windows (reproduced ~1 run in 8), and on Linux
+   the same race makes `json.dump` iterate a dict that `update()` is mutating,
+   raising *"dictionary changed size during iteration"*. Either would have killed the
+   kernel at ~11 h 50 m and forfeited the entire run — the precise scenario the
+   watchdog exists to prevent. Fixed with an `RLock` over `update()`/`write()`, a
+   JSON snapshot taken under the lock, and a bounded retry on `PermissionError`.
+   Covered by a 4-thread stress regression test; **15/15 clean suite runs** after the
+   fix, versus ~1 failure in 8 before. Lesson: the safety mechanism needs its own
+   failure modes tested, or it is just a second way to lose the run.
+
 ---
 
 ## 10. Bottom line

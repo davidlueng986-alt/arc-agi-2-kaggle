@@ -75,7 +75,7 @@ def build() -> Dict:
     cells.append(md_cell(
         "## 1. Write the harness to disk\n\n"
         "Every module below is the exact source that the offline test-suite "
-        "(`pytest tests`, 214 tests) exercises. The harness itself is "
+        "(`pytest tests`, 223 tests) exercises. The harness itself is "
         "**standard-library only** -- the sole third-party dependency in this "
         "kernel is vLLM.\n"
     ))

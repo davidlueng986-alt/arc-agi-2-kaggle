@@ -152,13 +152,109 @@ def test_validate_submission_obj_helper(tasks):
     assert validate_submission_obj(sub, tasks)
 
 
-def test_schema_matches_sample_submission_shape(data_dir, test_tasks):
+def test_schema_matches_sample_submission_shape(tmp_path, data_dir, test_tasks):
     sample_path = os.path.join(data_dir, "sample_submission.json")
     if not os.path.exists(sample_path):
         pytest.skip("sample_submission.json unavailable")
     sample = json.load(open(sample_path, encoding="utf-8"))
-    writer = SubmissionWriter(os.devnull, test_tasks)
+    writer = SubmissionWriter(str(tmp_path / "submission.json"), test_tasks)
     assert set(writer.data) == set(sample)
     for task_id, entries in sample.items():
         assert len(writer.data[task_id]) == len(entries)
         assert set(writer.data[task_id][0]) == set(entries[0])
+
+
+def test_concurrent_watchdog_and_scheduler_writes_do_not_race(tmp_path):
+    """Regression: the watchdog thread and the scheduler both called write().
+
+    Concurrent `os.replace` raised PermissionError on Windows, and concurrent
+    `json.dump` over a dict being mutated raises on Linux. Both would have fired
+    at the generation deadline and cost the entire run.
+    """
+    import threading
+
+    tasks = make_tasks()
+    writer = SubmissionWriter(str(tmp_path / "submission.json"), tasks)
+    errors: list = []
+
+    def hammer_updates():
+        try:
+            for i in range(300):
+                writer.update("aaa", [{"attempt_1": [[i % 10]], "attempt_2": [[i % 10]]}])
+                writer.update("bbb", [{"attempt_1": [[1]], "attempt_2": [[2]]},
+                                      {"attempt_1": [[3]], "attempt_2": [[4]]}])
+        except Exception as exc:
+            errors.append(("update", repr(exc)))
+
+    def hammer_writes():
+        try:
+            for _ in range(200):
+                writer.write()
+        except Exception as exc:
+            errors.append(("write", repr(exc)))
+
+    threads = [threading.Thread(target=hammer_updates)]
+    threads += [threading.Thread(target=hammer_writes) for _ in range(3)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=120)
+
+    assert not errors, f"concurrent submission writes raised: {errors[:3]}"
+    assert not any(t.is_alive() for t in threads), "a writer thread deadlocked"
+    assert writer.writes == 600
+    assert writer.validate() == []
+    assert json.load(open(writer.path, encoding="utf-8"))["aaa"][0]["attempt_1"] == [[299 % 10]]
+    assert not [f for f in os.listdir(tmp_path) if f.endswith(".tmp")]
+
+
+def test_write_retries_through_a_transient_permission_error(tmp_path, monkeypatch):
+    tasks = make_tasks()
+    writer = SubmissionWriter(str(tmp_path / "submission.json"), tasks)
+    real_replace = os.replace
+    state = {"calls": 0}
+
+    def flaky_replace(src, dst):
+        state["calls"] += 1
+        if state["calls"] <= 2:
+            raise PermissionError("[WinError 5] Access is denied")
+        return real_replace(src, dst)
+
+    monkeypatch.setattr(os, "replace", flaky_replace)
+    monkeypatch.setattr("harness.submission.WRITE_RETRY_DELAY", 0.0)
+    writer.write()
+    assert state["calls"] == 3
+    assert writer.writes == 1
+    assert json.load(open(writer.path, encoding="utf-8"))["aaa"][0]["attempt_1"] == PLACEHOLDER
+    assert not [f for f in os.listdir(tmp_path) if f.endswith(".tmp")]
+
+
+def test_write_raises_after_exhausting_retries(tmp_path, monkeypatch):
+    tasks = make_tasks()
+    writer = SubmissionWriter(str(tmp_path / "submission.json"), tasks)
+
+    def always_denied(src, dst):
+        raise PermissionError("[WinError 5] Access is denied")
+
+    monkeypatch.setattr(os, "replace", always_denied)
+    monkeypatch.setattr("harness.submission.WRITE_RETRY_DELAY", 0.0)
+    with pytest.raises(PermissionError):
+        writer.write()
+    assert writer.writes == 0
+    assert not [f for f in os.listdir(tmp_path) if f.endswith(".tmp")]
+
+
+def test_write_propagates_non_permission_errors_without_retry(tmp_path, monkeypatch):
+    tasks = make_tasks()
+    writer = SubmissionWriter(str(tmp_path / "submission.json"), tasks)
+    calls = {"n": 0}
+
+    def boom(src, dst):
+        calls["n"] += 1
+        raise OSError("disk full")
+
+    monkeypatch.setattr(os, "replace", boom)
+    with pytest.raises(OSError, match="disk full"):
+        writer.write()
+    assert calls["n"] == 1
+    assert not [f for f in os.listdir(tmp_path) if f.endswith(".tmp")]

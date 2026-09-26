@@ -11,7 +11,7 @@ Full quantitative budget model, score prediction and falsification criteria: `HY
 
 ### What this kernel does
 
-1. Writes the `harness/` package to disk (stdlib-only, 214 unit tests green offline).
+1. Writes the `harness/` package to disk (stdlib-only, 223 unit tests green offline).
 2. Installs vLLM — from a pre-baked wheelhouse if attached, else `pip` (needs internet, i.e. a non-rerun save).
 3. Launches one vLLM instance, `--tensor-parallel-size 4`, through a **6-rung flag fallback ladder** so a version-sensitive flag cannot kill the run.
 4. Probes `reasoning_effort=xhigh` and **calibrates** the per-sample token cost from real output.
