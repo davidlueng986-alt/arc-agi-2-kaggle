@@ -36,11 +36,17 @@ python src\make_submission.py                  # build submission.json (240 task
 
 | | Score | Approach |
 |---|---|---|
+| **Frontier reference** (GPT-6 Astra, ARC-AGI-2) | 95.0% | frontier API model (harness-sensitive) |
 | **Private LB #1** (Tufa Labs) | 83.06 | undisclosed (likely frontier-model agent + harness) |
 | **Best public notebook** | 33.89 | `mikelou1/arc-agi2-lb33-89-minimal-perfpatch` |
 | NVARC-2025 lineage | ~19–20 | Qwen3 + Unsloth LoRA + TTT + DFS decoding |
 | 2024 1st place re-baseline | ~2–6 | DSL + search |
 | Pure heuristic DSL (src/) | ~1 | this repo's starting point |
+
+**Scale-up plan**: `reference/qwen38-27b-solution-map.md` — full migration map
+to Qwen3.8-27B (QLoRA on 24GB L4, verified: unsloth support + Kaggle mirrors +
+cheap DeltaNet KV cache) with an Astra-inspired harness
+(hypothesis-verify loop + persistent reasoning state).
 
 ## What the LB 33.89 notebook does (the one to fork)
 
