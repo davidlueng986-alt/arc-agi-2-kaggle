@@ -77,7 +77,15 @@ def build() -> Dict:
         "Every module below is the exact source that the offline test-suite "
         "(`pytest tests`, 223 tests) exercises. The harness itself is "
         "**standard-library only** -- the sole third-party dependency in this "
-        "kernel is vLLM.\n"
+        "kernel is vLLM.\n\n"
+        "The first cell creates `harness/` because IPython's `%%writefile` magic "
+        "does **not** create parent directories and raises `FileNotFoundError` "
+        "if they are missing.\n"
+    ))
+    cells.append(code_cell(
+        "import os\n"
+        "os.makedirs('harness', exist_ok=True)\n"
+        "print('harness/ ready:', os.path.isdir('harness'))\n"
     ))
     for module in MODULE_ORDER:
         path = os.path.join(HARNESS_DIR, module)
@@ -87,7 +95,6 @@ def build() -> Dict:
 
     cells.append(code_cell(
         "import os\n"
-        "os.makedirs('harness', exist_ok=True)\n"
         "print(sorted(os.listdir('harness')))\n"
         "import harness\n"
         "print('harness import OK:', len(harness.__all__), 'exports')\n"

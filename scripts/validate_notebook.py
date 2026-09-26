@@ -67,9 +67,13 @@ def main() -> int:
         errors.append("dataset_sources must attach the model checkpoint")
 
     embedded = 0
-    for cell in code_cells:
+    first_writefile_index = None
+    makedirs_index = None
+    for cell_no, cell in enumerate(code_cells):
         src = source_of(cell)
         if src.startswith(MAGIC):
+            if first_writefile_index is None:
+                first_writefile_index = cell_no
             head, _, body = src.partition("\n")
             target = head.split()[1]
             real_path = os.path.join(ROOT, target.replace("/", os.sep))
@@ -89,6 +93,23 @@ def main() -> int:
                 ast.parse(body)
             except SyntaxError as exc:
                 errors.append(f"{target}: embedded module does not parse: {exc}")
+        elif "os.makedirs('harness'" in src or 'os.makedirs("harness"' in src:
+            if makedirs_index is None:
+                makedirs_index = cell_no
+
+    if first_writefile_index is None:
+        errors.append("no %%writefile cells found")
+    if makedirs_index is None:
+        errors.append(
+            "no cell creates harness/ before the writefile cells; IPython's "
+            "%%writefile does not create parent directories and will raise "
+            "FileNotFoundError"
+        )
+    elif first_writefile_index is not None and makedirs_index > first_writefile_index:
+        errors.append(
+            f"harness/ is created in code cell #{makedirs_index} but the first "
+            f"%%writefile is cell #{first_writefile_index}; the directory must exist first"
+        )
 
     if embedded != 15:
         errors.append(f"expected 15 embedded harness modules, verified {embedded}")
@@ -120,8 +141,11 @@ def main() -> int:
         if forbidden in joined:
             errors.append(f"runtime contains {forbidden!r}: {why}")
 
-    if "%%writefile" not in MAGIC and MAGIC not in source_of(code_cells[1]):
-        errors.append("second code cell should be the first writefile cell")
+    if first_writefile_index != makedirs_index + 1:
+        errors.append(
+            f"expected the first %%writefile cell (#{first_writefile_index}) to "
+            f"immediately follow the makedirs cell (#{makedirs_index})"
+        )
 
     print(f"cells: {len(cells)} total, {len(code_cells)} code, {len(md_cells)} markdown")
     print(f"embedded harness modules verified byte-identical: {embedded}/15")
