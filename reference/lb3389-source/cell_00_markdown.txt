@@ -1,0 +1,10 @@
+# v38 — 基于原始 33.89 baseline 的最小性能补丁
+
+本 notebook 以 `baseline_LB33.89_failed-in-aimo.ipynb` 为母版：**保留原有 9 个 cell、原 metadata、模型路径、竞赛输入、4×L4 并行、128 条 task-time 训练增强、16 条推理增强、LoRA 参数、解码阈值、候选聚合和 submission schema。**
+
+仅在原 `arc_solver.py` 的两个 logits 热点中做定点替换：
+
+1. `turbo_dfs`：仍对同一组 12 个 ARC token 使用同样的 NLL、阈值、候选排序与 DFS；仅把 full-vocabulary logits 的归一化留在 GPU，并只把 12 个 token 的结果传回 CPU。
+2. `calc_scores`：仍使用同一 teacher-forced NLL 作为重排序分数；仅在 GPU 上 gather 目标 token 并关闭未被消费的 KV cache。
+
+没有缩短或延长原 `global_end_time = now + 12h − 10min`，也没有改动 `starter.py`、结果写入、队列策略或提交逻辑。该版本的目的仅是减少 CPU↔GPU logits 传输与多余 KV cache 写入，从而在**不增加时间预算**的前提下提高已完成任务覆盖率。

@@ -1,0 +1,8 @@
+# Kaggle competition data — do NOT redistribute in git (competition rules)
+# Download via: scripts\download_data.ps1 or kaggle CLI
+data/
+submissions/
+src/__pycache__/
+*.pyc
+*.zip
+.cache/
