@@ -1,0 +1,13 @@
+{
+  "id": "liangwanyiudavid/arc26-h4-poetiq-judge",
+  "title": "ARC26 H4 Poetiq Judge",
+  "code_file": "arc26_h4_poetiq_judge.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "competition_sources": ["arc-prize-2026-arc-agi-2"],
+  "dataset_sources": ["saltb0x/qwen3-8-27b-fp8"],
+  "kernel_sources": []
+}

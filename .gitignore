@@ -9,3 +9,8 @@ src/__pycache__/
 
 # vendored reference repos: exclude their bundled competition data
 reference/poetiq-solver/data/
+
+# H4 branch artifacts
+output/
+__pycache__/
+.pytest_cache/
