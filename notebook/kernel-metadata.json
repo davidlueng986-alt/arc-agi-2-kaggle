@@ -1,0 +1,18 @@
+{
+  "id": "liangwanyiudavid/arc26-h1-pure-xhigh",
+  "title": "ARC26 H1 Pure xhigh",
+  "code_file": "arc26_h1_pure_xhigh.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "saltb0x/qwen3-8-27b-fp8"
+  ],
+  "competition_sources": [
+    "arc-prize-2026-arc-agi-2"
+  ],
+  "kernel_sources": [],
+  "model_sources": []
+}
