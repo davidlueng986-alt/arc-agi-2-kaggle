@@ -1,0 +1,14 @@
+{
+  "id": "liangwanyiudavid/arc26-h3-code-verify",
+  "title": "ARC26 H3 Code Verify",
+  "code_file": "arc26_h3_code_verify.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "keywords": [],
+  "dataset_sources": [],
+  "competition_sources": ["arc-prize-2026-arc-agi-2"],
+  "kernel_sources": []
+}

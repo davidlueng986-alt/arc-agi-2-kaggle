@@ -7,5 +7,12 @@ src/__pycache__/
 *.zip
 .cache/
 
+# H3 branch run artifacts (local eval outputs, feature caches)
+out/
+out_*/
+**/__pycache__/
+.pytest_cache/
+harness/__pycache__/
+
 # vendored reference repos: exclude their bundled competition data
 reference/poetiq-solver/data/
