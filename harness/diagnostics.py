@@ -73,6 +73,8 @@ class CoverageStats:
     def verdict(self) -> str:
         if not self.outputs:
             return "no ground truth"
+        if not self.samples:
+            return "NO DATA: zero samples drawn (LLM unavailable?) - nothing was measured"
         if self.coverage >= 0.5:
             return "H1 ALIVE: coverage ceiling >= 0.50, score is selection-limited"
         if self.coverage >= 0.4:

@@ -11,6 +11,7 @@ Regenerate after any harness change:  python scripts/make_notebook.py
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import sys
@@ -67,20 +68,38 @@ def read(path: str) -> str:
         return fh.read()
 
 
+def count_test_functions() -> int:
+    """Count `def test_*` across tests/ so the notebook never states a stale number."""
+    total = 0
+    tests_dir = os.path.join(ROOT, "tests")
+    for name in sorted(os.listdir(tests_dir)):
+        if not (name.startswith("test_") and name.endswith(".py")):
+            continue
+        with open(os.path.join(tests_dir, name), "r", encoding="utf-8") as fh:
+            tree = ast.parse(fh.read())
+        total += sum(
+            1
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
+        )
+    return total
+
+
 def build() -> Dict:
     cells: List[Dict] = []
+    n_tests = count_test_functions()
 
-    cells.append(md_cell(read(os.path.join(CELLS_DIR, "00_header.md"))))
+    cells.append(md_cell(read(os.path.join(CELLS_DIR, "00_header.md")).replace("@TESTS@", str(n_tests))))
 
     cells.append(md_cell(
         "## 1. Write the harness to disk\n\n"
         "Every module below is the exact source that the offline test-suite "
-        "(`pytest tests`, 223 tests) exercises. The harness itself is "
+        "(`pytest tests`, %d test functions) exercises. The harness itself is "
         "**standard-library only** -- the sole third-party dependency in this "
         "kernel is vLLM.\n\n"
         "The first cell creates `harness/` because IPython's `%%writefile` magic "
         "does **not** create parent directories and raises `FileNotFoundError` "
-        "if they are missing.\n"
+        "if they are missing.\n" % n_tests
     ))
     cells.append(code_cell(
         "import os\n"
