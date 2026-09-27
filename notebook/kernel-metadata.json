@@ -1,0 +1,19 @@
+{
+  "id": "liangwanyiudavid/arc26-h2-duck-repl",
+  "title": "Arc26 H2 Duck Repl",
+  "code_file": "arc26_h2_duck_repl.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "keywords": [],
+  "category_ids": [],
+  "competition_data_sources": [
+    "arc-prize-2026-arc-agi-2"
+  ],
+  "dataset_data_sources": [
+    "saltb0x/qwen3-8-27b-fp8"
+  ],
+  "kernel_data_sources": []
+}

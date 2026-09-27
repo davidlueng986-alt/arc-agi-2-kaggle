@@ -9,3 +9,17 @@ src/__pycache__/
 
 # vendored reference repos: exclude their bundled competition data
 reference/poetiq-solver/data/
+# the Duck's bundled benchmark run: 2.9 GB of movies/transcripts/HTML viewers.
+# Only the harness source (ARC3-Inference/, tufa-arc-agi-framework/) and the
+# Kaggle notebook are kept; re-clone with `git clone --depth 1
+# https://github.com/Tufalabs/duck-harness` if the run artifacts are wanted.
+reference/duck-harness/example-run/
+
+# H2 harness artifacts
+__pycache__/
+.pytest_cache/
+output/
+wheelhouse/
+*.log
+submission.json
+run_report.json

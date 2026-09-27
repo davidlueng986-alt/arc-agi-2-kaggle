@@ -3,6 +3,56 @@
 Everything you need to compete in `arc-prize-2026-arc-agi-2` on Kaggle.
 **Downloaded & verified: Sep 26, 2026.**
 
+---
+
+## This branch: `h2/duck-repl` — Duck-REPL Transfer
+
+One hypothesis branch of the entry. **Read `HYPOTHESIS.md` first** — it has the
+claim, the Duck→ARC-AGI-2 mechanism mapping, the Duck-vs-Land image
+reconciliation, the measured token/wall-clock budget with the arithmetic shown,
+the predicted score, and exactly what observation would refute it.
+
+```
+HYPOTHESIS.md          the claim, budget arithmetic, refutation criteria
+harness/               the agentic REPL harness (16 modules, no torch dependency)
+  oracle.py            exact-replay verification + diff diagnostics (spliceable)
+  segmentation.py      4-connected components, hashes, adjacency, nesting
+  sandbox.py           subprocess REPL: 30s cap, 4096-char output, state reset
+  agent.py             the per-task act-observe loop (verify == the Duck's action)
+  llm.py               vLLM/OpenAI-compatible client + MockLLM + markup recovery
+  prompts.py           system prompt, task block, status/ledger messages
+  context.py           token estimation + eviction (protected prefix)
+  budget.py            token/wall-clock accounting + watchdog
+  submission.py        candidate pool, 2-attempt selection, schema, atomic write
+  runner.py            workers, cumulative submission, adaptive scheduling
+  render.py            4x-style panel PNG sized to a vision-token budget
+tests/                 377 tests: every non-LLM component + a real notebook dry run
+scripts/eval_local.py  score a split against ground truth; --mock, --limit, --project
+scripts/measure_context.py  measured per-turn context cost over all 120 eval tasks
+scripts/build_notebook.py   generates notebook/*.ipynb from harness/ + cells/
+scripts/run_notebook_locally.py  executes the real notebook cells on a laptop
+scripts/build_wheelhouse.sh offline vLLM wheels for the internet-less rerun
+notebook/              arc26_h2_duck_repl.ipynb + kernel-metadata.json (enable_gpu: false)
+reference/duck-harness/ The Duck, vendored (MIT); example-run/ dropped, 2.9 GB
+```
+
+```bash
+python -m pytest tests -q                              # 377 tests, ~45 s, no GPU
+python scripts/measure_context.py                      # measured context budget
+python scripts/eval_local.py --mock --project          # plumbing + 240-task forecast
+python scripts/eval_local.py --base-url http://127.0.0.1:8000/v1 --limit 20
+python scripts/build_notebook.py                       # regenerate the notebook
+kaggle kernels push -p notebook                        # -> liangwanyiudavid/arc26-h2-duck-repl
+```
+
+Everything runs with **no GPU and no torch** (the dev machine is an 8 GB laptop
+that cannot host a 27B model), so the LLM client is injectable and `MockLLM`
+drives the whole stack in tests.
+
+---
+
+## Shared workspace (all branches)
+
 ## Layout
 
 ```
