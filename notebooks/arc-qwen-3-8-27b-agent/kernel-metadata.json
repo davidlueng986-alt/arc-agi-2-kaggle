@@ -1,0 +1,26 @@
+{
+  "id": "madarshbb/arc-qwen-3-8-27b-agent",
+  "id_no": 137803346,
+  "title": "ARC Qwen 3.8 27B agent",
+  "code_file": "arc-qwen-3-8-27b-agent.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "keywords": [],
+  "dataset_sources": [
+    "mirzamilanfarabi/arc3-vllm-h100-wheelhouse-v3",
+    "keithtyser/taaf-duck-qwen38-serving-v1"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "arc-prize-2026-arc-agi-2"
+  ],
+  "model_sources": [
+    "foysalemonshanto/qwen3-8-27b-fp8-repacked-v1/PyTorch/hf-fp8/1"
+  ],
+  "docker_image": "gcr.io/kaggle-private-byod/python@sha256:57e612b484cf3df5026ee4dcc3cb176974b22b2bc0937fb1e16132a8be4cb13c",
+  "machine_shape": "NvidiaL4"
+}

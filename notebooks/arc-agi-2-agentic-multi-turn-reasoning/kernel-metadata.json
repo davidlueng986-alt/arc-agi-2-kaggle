@@ -1,0 +1,28 @@
+{
+  "id": "khoinguyennguyen/arc-agi-2-agentic-multi-turn-reasoning",
+  "id_no": 138071398,
+  "title": "ARC-AGI 2 Agentic Multi-turn Reasoning ",
+  "code_file": "arc-agi-2-agentic-multi-turn-reasoning.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "keywords": [
+    "gpu"
+  ],
+  "dataset_sources": [
+    "mirzamilanfarabi/arc3-vllm-h100-wheelhouse-v3"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "arc-prize-2026-arc-agi-2"
+  ],
+  "model_sources": [
+    "zerabytex/qwen-3-6-35b-a3b-fp8/Transformers/default/1",
+    "mikedan7/qwen3-8-27b-fp8-official/PyTorch/hf-fp8/1"
+  ],
+  "docker_image": "gcr.io/kaggle-private-byod/python@sha256:37c64f7dd9c54116ecd1bcc88817c5469b88387388fade02bfa8bf3fc647d461",
+  "machine_shape": "NvidiaL4"
+}
